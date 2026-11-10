@@ -1,0 +1,6 @@
+{
+  "name": "QuickBill - Modern Invoicing & Billing",
+  "description": "Multi-entity invoicing and billing app with live INR calculations, GST breakdown, dynamic UPI QR payments, and dual Luminous Glass & Obsidian Lumina themes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
