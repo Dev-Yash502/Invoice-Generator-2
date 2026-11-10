@@ -246,9 +246,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                     <span className="font-mono text-xs font-semibold text-neutral-900 dark:text-white">
                       {formatINR(itemTotal)}
                     </span>
-                    <span className="font-mono text-[9px] text-neutral-400">
-                      @₹{(it.rate / 1000).toFixed(1)}k
-                    </span>
                   </div>
                 </div>
               );
