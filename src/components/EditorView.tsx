@@ -553,7 +553,10 @@ export const EditorView: React.FC<EditorViewProps> = ({
       </section>
 
       {/* 6. Sticky Bottom CTA in Editor */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white/90 dark:bg-[#0a0e18]/85 backdrop-blur-2xl border-t border-neutral-200/80 dark:border-white/[0.08] z-40 max-w-[580px] mx-auto no-print">
+      <div
+        className="fixed left-0 right-0 p-3 bg-white/95 dark:bg-[#0a0e18]/95 backdrop-blur-2xl border-t border-neutral-200/80 dark:border-white/[0.08] z-50 max-w-[580px] mx-auto no-print"
+        style={{ bottom: 'calc(4rem + max(env(safe-area-inset-bottom, 0px), 16px))' }}
+      >
         <button
           type="button"
           onClick={onPreview}
