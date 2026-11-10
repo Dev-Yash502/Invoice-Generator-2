@@ -40,12 +40,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 
   // Financial calculations
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
-  const gstAmount = invoice.gstEnabled ? subtotal * (invoice.gstRate / 100) : 0;
-  const grandTotal = Math.round(subtotal + gstAmount);
-
-  // Split CGST and SGST
-  const halfGstRate = (invoice.gstRate / 2).toFixed(1).replace('.0', '');
-  const halfGstAmount = gstAmount / 2;
+  const grandTotal = Math.round(subtotal);
 
   // Dynamic UPI URL
   const upiUrl = `upi://pay?pa=${encodeURIComponent(workspace.upi)}&pn=${encodeURIComponent(
@@ -262,15 +257,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
               {formatINRWithDecimals(subtotal)}
             </span>
           </div>
-
-          {invoice.gstEnabled ? (
-            <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-300">
-              <span>GST ({invoice.gstRate}%)</span>
-              <span className="font-mono font-medium text-neutral-900 dark:text-white">
-                {formatINRWithDecimals(gstAmount)}
-              </span>
-            </div>
-          ) : null}
 
           {/* Grand Total Bar */}
           <div className="mt-1 pt-1.5 flex items-center justify-between rounded-lg bg-white dark:bg-black/40 border border-neutral-200/60 dark:border-[#00f0ff]/30 px-3 py-2 shadow-sm">

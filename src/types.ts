@@ -16,8 +16,6 @@ export interface Invoice {
   clientEmail: string;
   clientAvatar?: string;
   items: LineItem[];
-  gstEnabled: boolean;
-  gstRate: number; // e.g. 18 for 18%
   status: 'Paid' | 'Pending' | 'Draft';
   workspaceKey: string;
   currency?: string;

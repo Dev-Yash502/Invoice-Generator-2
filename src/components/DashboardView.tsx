@@ -1,16 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  Plus, 
-  Globe, 
-  ShieldCheck, 
-  ArrowRightLeft, 
+  Plus,
   MoreVertical, 
   Search, 
-  Sparkles, 
-  CheckCircle2, 
-  Clock, 
-  PlusCircle, 
-  Lightbulb,
   Building,
   Store,
   Infinity as InfinityIcon,
@@ -28,7 +20,6 @@ interface DashboardViewProps {
   onPreviewInvoice: (invoice: Invoice) => void;
   onToggleInvoiceStatus: (invoiceId: string) => void;
   onOpenSettings: () => void;
-  onAddNewWorkspace: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -40,7 +31,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onPreviewInvoice,
   onToggleInvoiceStatus,
   onOpenSettings,
-  onAddNewWorkspace,
 }) => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,16 +50,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // Calculate totals for active workspace
   const totalAmount = workspaceInvoices.reduce((sum, inv) => {
     const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-    const tax = inv.gstEnabled ? sub * (inv.gstRate / 100) : 0;
-    return sum + sub + tax;
+    return sum + sub;
   }, 0);
 
   const paidAmount = workspaceInvoices
     .filter(inv => inv.status === 'Paid')
     .reduce((sum, inv) => {
       const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-      const tax = inv.gstEnabled ? sub * (inv.gstRate / 100) : 0;
-      return sum + sub + tax;
+      return sum + sub;
     }, 0);
 
   const pendingAmount = totalAmount - paidAmount;
@@ -111,13 +99,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           );
         })}
-        <button
-          onClick={onAddNewWorkspace}
-          className="flex-shrink-0 p-1.5 rounded-full bg-white/80 dark:bg-white/[0.05] border border-dashed border-neutral-300 dark:border-white/20 text-neutral-500 hover:text-[#635bff] dark:hover:text-[#00f0ff] transition-colors"
-          title="Add Entity"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       {/* 2. Active Company Profile Card */}
@@ -174,13 +155,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
         </div>
-      </section> : (
-        <section className="rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-dashed border-neutral-300 dark:border-white/10 p-6 text-center">
-          <h2 className="font-headline font-semibold text-sm text-neutral-900 dark:text-white">Set up a workspace</h2>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Add your business details to start creating invoices.</p>
-          <button onClick={onAddNewWorkspace} className="mt-3 px-3 py-1.5 rounded-xl bg-[#635bff] dark:bg-[#00f0ff] text-white dark:text-[#002022] font-headline font-bold text-xs">Add Workspace</button>
-        </section>
-      )}
+      </section> : null}
 
       {/* 3. Invoices Section */}
       <div className="flex flex-col space-y-2 pt-1">
@@ -248,7 +223,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 : 'bg-[#635bff]/10 dark:bg-purple-500/15 border-[#635bff]/20 dark:border-purple-400/30 text-[#635bff] dark:text-purple-300';
 
               const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-              const grand = inv.gstEnabled ? sub * (1 + inv.gstRate / 100) : sub;
+              const grand = sub;
               const mainDesc = inv.items[0]?.desc || 'Services';
 
               return (

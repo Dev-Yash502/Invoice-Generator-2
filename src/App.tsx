@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Workspace, Invoice, LineItem, ClientPreset } from './types';
+import { Workspace, Invoice, ClientPreset } from './types';
+import { FIXED_WORKSPACES } from './data/defaultData';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
@@ -12,7 +13,6 @@ import { EditorView } from './components/EditorView';
 import { PreviewView } from './components/PreviewView';
 import { SettingsView } from './components/SettingsView';
 import { ReceiptModal } from './components/ReceiptModal';
-import { NewWorkspaceModal } from './components/NewWorkspaceModal';
 import { Toast } from './components/Toast';
 
 export default function App() {
@@ -39,30 +39,12 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'editor' | 'preview' | 'settings'>('dashboard');
 
   // Workspaces state
-  const [workspaces, setWorkspaces] = useState<Record<string, Workspace>>(() => {
-    const saved = localStorage.getItem('qb_workspaces');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved) as Record<string, Workspace>;
-        const seededProfiles: Record<string, string> = { zen: 'Zen Webs Studio', 'pearlio-col': 'Pearlio Collections', pearlio: 'Pearlio Global' };
-        Object.entries(seededProfiles).forEach(([key, name]) => {
-          if (parsed[key]?.name === name) delete parsed[key];
-        });
-        return parsed;
-      }
-      catch { return {}; }
-    }
-    return {};
-  });
+  const workspaces = FIXED_WORKSPACES;
 
   const [activeWorkspaceKey, setActiveWorkspaceKey] = useState<string>(() => {
     const saved = localStorage.getItem('qb_active_ws');
-    return saved && workspaces[saved] ? saved : Object.keys(workspaces)[0] || '';
+    return saved && workspaces[saved] ? saved : 'zen';
   });
-
-  useEffect(() => {
-    localStorage.setItem('qb_workspaces', JSON.stringify(workspaces));
-  }, [workspaces]);
 
   useEffect(() => {
     localStorage.setItem('qb_active_ws', activeWorkspaceKey);
@@ -86,18 +68,6 @@ export default function App() {
     localStorage.setItem('qb_invoices', JSON.stringify(invoices));
   }, [invoices]);
 
-  // GST rate setting
-  const [defaultGstRate, setDefaultGstRate] = useState<number>(() => {
-    const saved = localStorage.getItem('qb_gst_rate');
-    return saved ? parseInt(saved, 10) : 18;
-  });
-
-  const handleUpdateGstRate = (rate: number) => {
-    setDefaultGstRate(rate);
-    localStorage.setItem('qb_gst_rate', rate.toString());
-    showToast(`Default GST rate set to ${rate}%`);
-  };
-
   // Active working invoice
   const createNewInvoiceDraft = (wsKey: string): Invoice => {
     const rnd = Math.floor(100 + Math.random() * 900);
@@ -116,8 +86,6 @@ export default function App() {
       clientAvatar: '',
       status: 'Draft',
       workspaceKey: wsKey,
-      gstEnabled: true,
-      gstRate: defaultGstRate,
       items: [
         { id: '1', desc: '', notes: '', qty: 1, rate: 0 },
       ],
@@ -131,7 +99,6 @@ export default function App() {
   // Modals & Feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const [isAddWsOpen, setIsAddWsOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -148,7 +115,6 @@ export default function App() {
   };
 
   const handleStartNewInvoice = () => {
-    if (!Object.keys(workspaces).length) { setIsAddWsOpen(true); return; }
     const draft = createNewInvoiceDraft(activeWorkspaceKey);
     setWorkingInvoice(draft);
     setCurrentView('editor');
@@ -162,6 +128,12 @@ export default function App() {
     }
     setCurrentView('preview');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleEditorSelectWorkspace = (key: string) => {
+    if (!workspaces[key]) return;
+    setActiveWorkspaceKey(key);
+    setWorkingInvoice(current => ({ ...current, workspaceKey: key }));
   };
 
   const handleCompileAndPreview = () => {
@@ -192,15 +164,6 @@ export default function App() {
         return inv;
       })
     );
-  };
-
-  const handleAddWorkspace = (newWs: Workspace) => {
-    setWorkspaces(prev => ({
-      ...prev,
-      [newWs.key]: newWs,
-    }));
-    setActiveWorkspaceKey(newWs.key);
-    showToast(`Added workspace: ${newWs.name}`);
   };
 
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
@@ -244,7 +207,6 @@ export default function App() {
             onPreviewInvoice={handlePreviewInvoice}
             onToggleInvoiceStatus={handleToggleInvoiceStatus}
             onOpenSettings={() => setCurrentView('settings')}
-            onAddNewWorkspace={() => setIsAddWsOpen(true)}
           />
         )}
 
@@ -252,7 +214,7 @@ export default function App() {
           <EditorView
             workspaces={workspaces}
             activeWorkspaceKey={activeWorkspaceKey}
-            onSelectWorkspace={setActiveWorkspaceKey}
+            onSelectWorkspace={handleEditorSelectWorkspace}
             invoice={workingInvoice}
             clients={savedClients}
             onUpdateInvoice={setWorkingInvoice}
@@ -274,10 +236,6 @@ export default function App() {
           <SettingsView
             isDark={isDark}
             onToggleTheme={toggleTheme}
-            workspaces={workspaces}
-            activeWorkspaceKey={activeWorkspaceKey}
-            onSelectWorkspace={setActiveWorkspaceKey}
-            onOpenAddWorkspace={() => setIsAddWsOpen(true)}
           />
         )}
       </main>
@@ -290,12 +248,6 @@ export default function App() {
         workspace={activeWs}
       />}
 
-      {/* New Workspace Modal */}
-      <NewWorkspaceModal
-        isOpen={isAddWsOpen}
-        onClose={() => setIsAddWsOpen(false)}
-        onAddWorkspace={handleAddWorkspace}
-      />
 
       {/* Fixed Bottom Tab Navigation */}
       <BottomNav

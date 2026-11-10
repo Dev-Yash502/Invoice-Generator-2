@@ -1,3 +1,29 @@
+import { Workspace } from '../types';
+
+export const FIXED_WORKSPACES: Record<string, Workspace> = {
+  zen: {
+    key: 'zen', name: 'Zen Webs Studio', initial: 'Z', tagline: 'Video Editing Agency',
+    agencyType: 'Video Editing Agency', website: 'zenwebs.io', email: 'contact@zenwebs.io',
+    upi: 'zenwebs@upi', icon: 'laptop_mac',
+  },
+  'pearlio-col': {
+    key: 'pearlio-col', name: 'Pearlio Collections', initial: 'P', tagline: 'Artisan Decor & Home Lifestyle',
+    agencyType: 'Direct-to-Consumer Online Store', website: 'pearlio.store', email: 'hello@pearlio.store',
+    upi: 'pearlio@icici', icon: 'storefront', logoUrl: '/assets/pearlio_collections_logo.png',
+  },
+  pearlio: {
+    key: 'pearlio', name: 'Pearlio', initial: 'P', tagline: 'Multi-service Agency',
+    agencyType: 'PDF Editing, Website Design & Video Editing', website: 'pearlio.global', email: 'advisory@pearlio.global',
+    upi: 'pearlioglobal@hdfcbank', icon: 'all_inclusive', logoUrl: '/assets/pearlio_global_logo.png',
+  },
+};
+
+export const ZEN_VIDEO_PACKAGES = [
+  { name: 'Standard', price: 599 },
+  { name: 'Premium', price: 999 },
+  { name: 'Advance', price: 1599 },
+] as const;
+
 export function formatINR(val: number): string {
   const rounded = Math.round(val);
   return '₹' + rounded.toLocaleString('en-IN');

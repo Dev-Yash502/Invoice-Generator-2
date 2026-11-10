@@ -14,11 +14,10 @@ import {
   Calculator, 
   Eye, 
   CheckCircle2,
-  ChevronDown,
   Building2
 } from 'lucide-react';
 import { Workspace, Invoice, LineItem, ClientPreset } from '../types';
-import { formatINR } from '../data/defaultData';
+import { formatINR, ZEN_VIDEO_PACKAGES } from '../data/defaultData';
 
 interface EditorViewProps {
   workspaces: Record<string, Workspace>;
@@ -47,8 +46,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
   // Calculations
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
-  const gstAmount = invoice.gstEnabled ? subtotal * (invoice.gstRate / 100) : 0;
-  const grandTotal = subtotal + gstAmount;
+  const grandTotal = subtotal;
 
   // Actions
   const handleRegenerateId = () => {
@@ -96,10 +94,10 @@ export const EditorView: React.FC<EditorViewProps> = ({
     onUpdateInvoice({ ...invoice, items: newItems });
   };
 
-  const handleToggleGst = () => {
+  const handleSelectZenPackage = (pkg: typeof ZEN_VIDEO_PACKAGES[number]) => {
     onUpdateInvoice({
       ...invoice,
-      gstEnabled: !invoice.gstEnabled,
+      items: [{ id: invoice.items[0]?.id || Date.now().toString(), desc: pkg.name, notes: '', qty: 1, rate: pkg.price }],
     });
   };
 
@@ -339,6 +337,27 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
       {/* 4. Items Section */}
       <section className="mb-3.5">
+        {activeWs.key === 'zen' && (
+          <div className="mb-3 rounded-2xl bg-white/80 dark:bg-white/[0.04] border border-neutral-200/70 dark:border-white/[0.08] p-3.5">
+            <h3 className="font-headline font-bold text-sm text-neutral-900 dark:text-white mb-2">Video Editing Packages</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {ZEN_VIDEO_PACKAGES.map(pkg => {
+                const selected = invoice.items.length === 1 && invoice.items[0].desc === pkg.name && invoice.items[0].rate === pkg.price;
+                return (
+                  <button
+                    key={pkg.name}
+                    type="button"
+                    onClick={() => handleSelectZenPackage(pkg)}
+                    className={`rounded-xl border px-2 py-2 text-left transition-colors ${selected ? 'border-[#635bff] dark:border-[#00f0ff] bg-[#635bff]/10 dark:bg-[#00f0ff]/10' : 'border-neutral-200 dark:border-white/10'}`}
+                  >
+                    <span className="block text-xs font-semibold text-neutral-900 dark:text-white">{pkg.name}</span>
+                    <span className="block font-mono text-xs text-[#635bff] dark:text-[#00f0ff]">{formatINR(pkg.price)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-2.5 px-1">
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5 text-[#635bff] dark:text-[#00f0ff]" />
@@ -367,6 +386,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       type="text"
                       value={item.desc}
                       onChange={e => handleUpdateItem(index, { desc: e.target.value })}
+                      readOnly={activeWs.key === 'zen'}
                       className="w-full bg-transparent font-headline font-semibold text-sm text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400"
                       placeholder="Work / Service Description"
                     />
@@ -378,7 +398,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       placeholder="Notes (optional)"
                     />
                   </div>
-                  {invoice.items.length > 1 && (
+                  {invoice.items.length > 1 && activeWs.key !== 'zen' && (
                     <button
                       type="button"
                       onClick={() => handleDeleteItem(index)}
@@ -399,6 +419,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleAdjustQty(index, -1)}
+                        disabled={activeWs.key === 'zen'}
                         className="w-5 h-5 flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-bold active:scale-90"
                       >
                         -
@@ -408,11 +429,13 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         min="1"
                         value={item.qty}
                         onChange={e => handleUpdateItem(index, { qty: Math.max(1, parseInt(e.target.value) || 1) })}
+                        readOnly={activeWs.key === 'zen'}
                         className="w-full text-center bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => handleAdjustQty(index, 1)}
+                        disabled={activeWs.key === 'zen'}
                         className="w-5 h-5 flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-bold active:scale-90"
                       >
                         +
@@ -432,6 +455,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         step="500"
                         value={item.rate}
                         onChange={e => handleUpdateItem(index, { rate: Math.max(0, parseFloat(e.target.value) || 0) })}
+                        readOnly={activeWs.key === 'zen'}
                         className="w-full bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
                       />
                     </div>
@@ -452,14 +476,14 @@ export const EditorView: React.FC<EditorViewProps> = ({
         </div>
 
         {/* Add Line Item Button */}
-        <button
+        {activeWs.key !== 'zen' && <button
           type="button"
           onClick={handleAddItem}
           className="w-full mt-2.5 py-2.5 px-3 rounded-xl bg-white/70 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-white/[0.06] border border-dashed border-[#635bff]/40 dark:border-[#00f0ff]/40 text-[#635bff] dark:text-[#00f0ff] font-mono text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition-all cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Add Line Item</span>
-        </button>
+        </button>}
       </section>
 
       {/* 5. Payment Summary Card */}
@@ -479,33 +503,6 @@ export const EditorView: React.FC<EditorViewProps> = ({
             <span>Subtotal</span>
             <span className="font-mono text-neutral-900 dark:text-white font-semibold">
               {formatINR(subtotal)}
-            </span>
-          </div>
-
-          {/* GST Toggle */}
-          <div className="flex items-center justify-between py-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                GST ({invoice.gstRate}%)
-              </span>
-              <button
-                type="button"
-                onClick={handleToggleGst}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors focus:outline-none ${
-                  invoice.gstEnabled
-                    ? 'bg-[#635bff] dark:bg-[#00f0ff]'
-                    : 'bg-neutral-300 dark:bg-white/20'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white dark:bg-[#002022] shadow transition-transform ${
-                    invoice.gstEnabled ? 'translate-x-4' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-            <span className="font-mono text-xs text-neutral-900 dark:text-white font-semibold">
-              {formatINR(gstAmount)}
             </span>
           </div>
 

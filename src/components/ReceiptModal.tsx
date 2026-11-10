@@ -19,8 +19,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   if (!isOpen) return null;
 
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
-  const gstAmount = invoice.gstEnabled ? subtotal * (invoice.gstRate / 100) : 0;
-  const grandTotal = Math.round(subtotal + gstAmount);
+  const grandTotal = Math.round(subtotal);
   const receiptId = invoice.id.replace('#INV-', '#REC-').replace('#PC-', '#REC-PC-').replace('#PRL-', '#REC-PRL-');
 
   return (

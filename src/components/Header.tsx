@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
     subtitle = 'QuickBill Core';
   } else if (currentView === 'settings') {
     title = 'Settings';
-    subtitle = 'Preferences & Workspaces';
+    subtitle = 'Preferences';
   }
 
   const showBack = currentView !== 'dashboard';
