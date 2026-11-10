@@ -32,3 +32,17 @@ export function formatINR(val: number): string {
 export function formatINRWithDecimals(val: number): string {
   return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+export function getInvoiceTotal(invoice: { items: { qty: number; rate: number }[] }): number {
+  return Math.round(invoice.items.reduce((sum, item) => sum + (Number(item.qty) || 0) * (Number(item.rate) || 0), 0));
+}
+
+export function getInvoiceAmountPaid(invoice: { status?: string; amountPaid?: number }, total: number): number {
+  if (typeof invoice.amountPaid === 'number') return Math.min(total, Math.max(0, invoice.amountPaid));
+  return invoice.status === 'Paid' ? total : 0;
+}
+
+export function getInvoicePaymentStatus(amountPaid: number, total: number): 'Paid' | 'Partially Paid' | 'Unpaid' {
+  if (total > 0 && amountPaid >= total) return 'Paid';
+  return amountPaid > 0 ? 'Partially Paid' : 'Unpaid';
+}

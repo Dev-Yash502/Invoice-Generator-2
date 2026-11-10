@@ -18,7 +18,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
-import { formatINR, formatINRWithDecimals } from '../data/defaultData';
+import { formatINR, formatINRWithDecimals, getInvoiceAmountPaid, getInvoicePaymentStatus } from '../data/defaultData';
 
 interface PreviewViewProps {
   workspace: Workspace;
@@ -41,11 +41,14 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   // Financial calculations
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
   const grandTotal = Math.round(subtotal);
+  const amountPaid = getInvoiceAmountPaid(invoice, grandTotal);
+  const remainingBalance = Math.max(0, grandTotal - amountPaid);
+  const paymentStatus = getInvoicePaymentStatus(amountPaid, grandTotal);
 
   // Dynamic UPI URL
   const upiUrl = `upi://pay?pa=${encodeURIComponent(workspace.upi)}&pn=${encodeURIComponent(
     workspace.name
-  )}&am=${grandTotal}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoice.id}`)}`;
+  )}&am=${remainingBalance}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoice.id}`)}`;
 
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
     upiUrl
@@ -60,7 +63,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   };
 
   const handleShareWhatsApp = () => {
-    const text = `Hi ${invoice.clientName},\nHere is your invoice *${invoice.id}* from *${workspace.name}* for *${formatINR(grandTotal)}*.\n\nPay securely via UPI: ${workspace.upi}\nThank you for doing business with us!`;
+    const text = `Hi ${invoice.clientName},\nHere is your invoice *${invoice.id}* from *${workspace.name}*.\nTotal: ${formatINR(grandTotal)}\nPaid: ${formatINR(amountPaid)}\nRemaining: ${formatINR(remainingBalance)}\n\nPay securely via UPI: ${workspace.upi}\nThank you for doing business with us!`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -70,7 +73,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     const lineItems = invoice.items
       .map(item => `${item.desc}: ${item.qty} × ${formatINR(item.rate)} = ${formatINR(item.qty * item.rate)}`)
       .join('\n');
-    const body = `Dear ${invoice.clientName},\n\nPlease find your invoice summary below:\n\nInvoice Number: ${invoice.id}\nCompany Name: ${invoice.clientCompany || '—'}\nClient Name: ${invoice.clientName || '—'}\nIssue Date: ${invoice.issueDate}\nDue Date: ${invoice.dueDate}\n\nWork / Service Description and Amount:\n${lineItems}\n\nTotal Due: ${formatINR(grandTotal)}\n\nPayment Details:\nUPI VPA: ${workspace.upi}\n\nPlease let us know once the transfer is completed.\n\nWarm regards,\n${workspace.name}`;
+    const body = `Dear ${invoice.clientName},\n\nPlease find your invoice summary below:\n\nInvoice Number: ${invoice.id}\nCompany Name: ${invoice.clientCompany || '—'}\nClient Name: ${invoice.clientName || '—'}\nIssue Date: ${invoice.issueDate}\nDue Date: ${invoice.dueDate}\n\nWork / Service Description and Amount:\n${lineItems}\n\nTotal Amount: ${formatINR(grandTotal)}\nAmount Paid: ${formatINR(amountPaid)}\nRemaining Balance: ${formatINR(remainingBalance)}\nPayment Status: ${paymentStatus}\n\nPayment Details:\nUPI VPA: ${workspace.upi}\n\nPlease let us know once the transfer is completed.\n\nWarm regards,\n${workspace.name}`;
     window.location.href = `mailto:${invoice.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -138,11 +141,12 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2.5">
               {workspace.logoUrl ? (
-                <div className="w-10 h-10 rounded-xl overflow-hidden border border-neutral-200/80 dark:border-white/10 shadow-sm shrink-0 bg-white">
+                <div className="w-10 h-10 rounded-xl overflow-hidden border border-neutral-200/80 dark:border-white/10 shadow-sm shrink-0 bg-white flex items-center justify-center print:border-neutral-200 print:shadow-none">
                   <img
                     src={workspace.logoUrl}
                     alt={workspace.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain print:object-contain"
+                    crossOrigin="anonymous"
                   />
                 </div>
               ) : (
@@ -164,12 +168,14 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
           <div className="flex flex-col items-end">
             <span
               className={`px-2 py-0.5 rounded-full border font-mono text-[9px] uppercase font-semibold tracking-wider ${
-                invoice.status === 'Paid'
+                paymentStatus === 'Paid'
                   ? 'bg-teal-500/15 text-teal-700 dark:text-emerald-400 border-teal-500/30'
-                  : 'bg-[#635bff]/15 text-[#635bff] dark:text-[#00f0ff] border-[#635bff]/30'
+                  : paymentStatus === 'Partially Paid'
+                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                    : 'bg-[#635bff]/15 text-[#635bff] dark:text-[#00f0ff] border-[#635bff]/30'
               }`}
             >
-              {invoice.status}
+              {paymentStatus}
             </span>
             <span className="font-mono text-xs text-neutral-900 dark:text-white font-bold mt-1">
               {invoice.id}
@@ -268,6 +274,15 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                 {formatINR(grandTotal)}
               </span>
             </div>
+          </div>
+          <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-300">
+            <span>Amount Paid</span><span className="font-mono font-semibold text-neutral-900 dark:text-white">{formatINR(amountPaid)}</span>
+          </div>
+          <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-300">
+            <span>Remaining Balance</span><span className="font-mono font-semibold text-neutral-900 dark:text-white">{formatINR(remainingBalance)}</span>
+          </div>
+          <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-300">
+            <span>Payment Status</span><span className="font-mono font-semibold text-neutral-900 dark:text-white">{paymentStatus}</span>
           </div>
         </div>
 

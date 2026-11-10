@@ -1,7 +1,7 @@
 import React from 'react';
 import { CheckCircle2, X, Printer, ShieldCheck } from 'lucide-react';
 import { Invoice, Workspace } from '../types';
-import { formatINR } from '../data/defaultData';
+import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus } from '../data/defaultData';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -20,6 +20,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
   const grandTotal = Math.round(subtotal);
+  const amountPaid = getInvoiceAmountPaid(invoice, grandTotal);
+  const remainingBalance = Math.max(0, grandTotal - amountPaid);
+  const paymentStatus = getInvoicePaymentStatus(amountPaid, grandTotal);
   const receiptId = invoice.id.replace('#INV-', '#REC-').replace('#PC-', '#REC-PC-').replace('#PRL-', '#REC-PRL-');
 
   return (
@@ -74,16 +77,18 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <div className="flex justify-between items-center">
             <span className="text-neutral-500">Status:</span>
             <span className="text-teal-600 dark:text-emerald-400 font-bold uppercase text-[10px] px-2 py-0.5 rounded-full bg-teal-500/10">
-              Paid
+              {paymentStatus}
             </span>
           </div>
 
           <div className="h-px bg-neutral-200 dark:bg-white/10 my-1"></div>
 
           <div className="flex justify-between items-center text-sm font-bold text-[#635bff] dark:text-[#00f0ff]">
-            <span>Amount:</span>
+            <span>Total:</span>
             <span>{formatINR(grandTotal)}</span>
           </div>
+          <div className="flex justify-between items-center"><span>Paid:</span><span>{formatINR(amountPaid)}</span></div>
+          <div className="flex justify-between items-center font-semibold"><span>Remaining:</span><span>{formatINR(remainingBalance)}</span></div>
         </div>
 
         {/* Modal Buttons */}

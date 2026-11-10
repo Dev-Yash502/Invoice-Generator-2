@@ -16,7 +16,8 @@ export interface Invoice {
   clientEmail: string;
   clientAvatar?: string;
   items: LineItem[];
-  status: 'Paid' | 'Pending' | 'Draft';
+  status: 'Paid' | 'Partially Paid' | 'Unpaid' | 'Pending' | 'Draft';
+  amountPaid?: number;
   workspaceKey: string;
   currency?: string;
 }

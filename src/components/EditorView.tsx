@@ -17,7 +17,7 @@ import {
   Building2
 } from 'lucide-react';
 import { Workspace, Invoice, LineItem, ClientPreset } from '../types';
-import { formatINR, ZEN_VIDEO_PACKAGES } from '../data/defaultData';
+import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, ZEN_VIDEO_PACKAGES } from '../data/defaultData';
 
 interface EditorViewProps {
   workspaces: Record<string, Workspace>;
@@ -46,7 +46,11 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
   // Calculations
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
-  const grandTotal = subtotal;
+  const grandTotal = Math.round(subtotal);
+  const amountPaid = getInvoiceAmountPaid(invoice, grandTotal);
+  const remainingBalance = Math.max(0, grandTotal - amountPaid);
+  const paymentError = amountPaid > grandTotal ? 'Advance payment cannot exceed the total amount.' : '';
+  const paymentStatus = getInvoicePaymentStatus(Math.min(amountPaid, grandTotal), grandTotal);
 
   // Actions
   const handleRegenerateId = () => {
@@ -195,7 +199,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
             </h2>
           </div>
           <span className="px-2 py-0.5 rounded-full bg-teal-500/15 dark:bg-emerald-500/15 border border-teal-500/30 text-teal-700 dark:text-emerald-400 font-mono text-[10px] font-semibold uppercase tracking-wider">
-            {invoice.status}
+            {paymentStatus}
           </span>
         </div>
 
@@ -508,6 +512,23 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
           <div className="h-px w-full bg-neutral-200/70 dark:bg-white/10 my-1" />
 
+          <label className="flex flex-col gap-1 text-xs text-neutral-600 dark:text-neutral-300">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider">Advance Payment (optional)</span>
+            <div className="flex items-center rounded-xl bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] px-3 py-2 focus-within:border-[#635bff] dark:focus-within:border-[#00f0ff]/60">
+              <span className="font-mono text-[#635bff] dark:text-[#00f0ff] mr-1">₹</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={amountPaid}
+                onChange={e => onUpdateInvoice({ ...invoice, amountPaid: Math.max(0, Number(e.target.value) || 0) })}
+                className="w-full bg-transparent font-mono text-sm font-semibold text-neutral-900 dark:text-white outline-none"
+                aria-invalid={Boolean(paymentError)}
+              />
+            </div>
+            {paymentError && <span role="alert" className="text-red-600 dark:text-red-400">{paymentError}</span>}
+          </label>
+
           {/* Total Payable */}
           <div className="flex items-baseline justify-between pt-0.5">
             <span className="font-headline font-bold text-sm text-neutral-900 dark:text-white">
@@ -519,6 +540,15 @@ export const EditorView: React.FC<EditorViewProps> = ({
               </span>
             </div>
           </div>
+          <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+            <span>Amount Paid</span><span className="font-mono font-semibold text-neutral-900 dark:text-white">{formatINR(amountPaid)}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+            <span>Remaining Balance</span><span className="font-mono font-semibold text-neutral-900 dark:text-white">{formatINR(remainingBalance)}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+            <span>Payment Status</span><span className="font-mono font-semibold text-[#635bff] dark:text-[#00f0ff]">{paymentStatus}</span>
+          </div>
         </div>
       </section>
 
@@ -527,10 +557,11 @@ export const EditorView: React.FC<EditorViewProps> = ({
         <button
           type="button"
           onClick={onPreview}
+          disabled={Boolean(paymentError)}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#635bff] to-[#493ee5] dark:from-[#00f0ff] dark:via-[#00f0ff] dark:to-[#571bc1] text-white dark:text-[#002022] font-headline font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#635bff]/30 dark:shadow-[0_0_24px_rgba(0,240,255,0.45)] active:scale-[0.98] transition-all pulse-cta-light dark:pulse-cta-dark cursor-pointer"
         >
-          <Eye className="w-5 h-5" />
-          <span>Preview Invoice</span>
+          <CheckCircle2 className="w-5 h-5" />
+          <span>Save Bill</span>
         </button>
       </div>
 

@@ -9,7 +9,7 @@ import {
   Laptop
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
-import { formatINR } from '../data/defaultData';
+import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from '../data/defaultData';
 
 interface DashboardViewProps {
   workspaces: Record<string, Workspace>;
@@ -18,7 +18,7 @@ interface DashboardViewProps {
   invoices: Invoice[];
   onOpenNewInvoice: () => void;
   onPreviewInvoice: (invoice: Invoice) => void;
-  onToggleInvoiceStatus: (invoiceId: string) => void;
+  onUpdateInvoicePayment: (invoiceId: string, amountPaid: number) => void;
   onOpenSettings: () => void;
 }
 
@@ -29,17 +29,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   invoices,
   onOpenNewInvoice,
   onPreviewInvoice,
-  onToggleInvoiceStatus,
+  onUpdateInvoicePayment,
   onOpenSettings,
 }) => {
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Partially Paid' | 'Unpaid'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const activeWorkspace = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
   const workspaceInvoices = invoices.filter(inv => inv.workspaceKey === activeWorkspaceKey);
 
   const filteredInvoices = workspaceInvoices.filter(inv => {
-    const matchesFilter = statusFilter === 'All' || inv.status === statusFilter;
+    const total = getInvoiceTotal(inv);
+    const paid = getInvoiceAmountPaid(inv, total);
+    const matchesFilter = statusFilter === 'All' || getInvoicePaymentStatus(paid, total) === statusFilter;
     const matchesSearch = 
       inv.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       inv.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,17 +50,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   });
 
   // Calculate totals for active workspace
-  const totalAmount = workspaceInvoices.reduce((sum, inv) => {
-    const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-    return sum + sub;
-  }, 0);
-
-  const paidAmount = workspaceInvoices
-    .filter(inv => inv.status === 'Paid')
-    .reduce((sum, inv) => {
-      const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-      return sum + sub;
-    }, 0);
+  const totalAmount = workspaceInvoices.reduce((sum, inv) => sum + getInvoiceTotal(inv), 0);
+  const paidAmount = workspaceInvoices.reduce((sum, inv) => sum + getInvoiceAmountPaid(inv, getInvoiceTotal(inv)), 0);
 
   const pendingAmount = totalAmount - paidAmount;
 
@@ -191,7 +184,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex items-center p-0.5 bg-neutral-200/70 dark:bg-black/30 rounded-xl">
-            {(['All', 'Paid', 'Pending'] as const).map(f => (
+            {(['All', 'Paid', 'Partially Paid', 'Unpaid'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
@@ -217,13 +210,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           ) : (
             filteredInvoices.map(inv => {
-              const isPaid = inv.status === 'Paid';
-              const badgeClass = isPaid
+              const grand = getInvoiceTotal(inv);
+              const paid = getInvoiceAmountPaid(inv, grand);
+              const balance = Math.max(0, grand - paid);
+              const status = getInvoicePaymentStatus(paid, grand);
+              const badgeClass = status === 'Paid'
                 ? 'bg-teal-500/15 dark:bg-emerald-500/15 border-teal-500/30 text-teal-700 dark:text-emerald-400'
-                : 'bg-[#635bff]/10 dark:bg-purple-500/15 border-[#635bff]/20 dark:border-purple-400/30 text-[#635bff] dark:text-purple-300';
-
-              const sub = inv.items.reduce((s, it) => s + it.qty * it.rate, 0);
-              const grand = sub;
+                : status === 'Partially Paid'
+                  ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300'
+                  : 'bg-[#635bff]/10 dark:bg-purple-500/15 border-[#635bff]/20 dark:border-purple-400/30 text-[#635bff] dark:text-purple-300';
               const mainDesc = inv.items[0]?.desc || 'Services';
 
               return (
@@ -259,20 +254,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onToggleInvoiceStatus(inv.id);
+                          const entered = window.prompt(`Amount paid so far (total ${formatINR(grand)}):`, String(paid));
+                          if (entered === null) return;
+                          const nextPaid = Number(entered);
+                          if (!Number.isFinite(nextPaid) || nextPaid < 0 || nextPaid > grand) {
+                            window.alert(`Enter an amount from ₹0 to ${formatINR(grand)}.`);
+                            return;
+                          }
+                          onUpdateInvoicePayment(inv.id, nextPaid);
                         }}
-                        title="Toggle status"
+                        title="Update payment amount"
                         className={`mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${badgeClass} font-mono text-[10px] font-semibold hover:opacity-85 transition-opacity`}
                       >
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            isPaid
+                            status === 'Paid'
                               ? 'bg-teal-500 dark:bg-emerald-400'
-                              : 'bg-[#635bff] dark:bg-purple-400'
+                              : status === 'Partially Paid' ? 'bg-amber-500' : 'bg-[#635bff] dark:bg-purple-400'
                           }`}
                         />
-                        <span>{inv.status}</span>
+                        <span>{status}</span>
                       </button>
+                      <span className="mt-1 text-[10px] text-neutral-500 font-mono">Paid {formatINR(paid)} · Due {formatINR(balance)}</span>
                     </div>
                   </div>
                 </div>

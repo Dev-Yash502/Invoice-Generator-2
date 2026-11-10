@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Workspace, Invoice, ClientPreset } from './types';
-import { FIXED_WORKSPACES } from './data/defaultData';
+import { FIXED_WORKSPACES, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from './data/defaultData';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
@@ -85,6 +85,7 @@ export default function App() {
       clientCompany: '',
       clientAvatar: '',
       status: 'Draft',
+      amountPaid: 0,
       workspaceKey: wsKey,
       items: [
         { id: '1', desc: '', notes: '', qty: 1, rate: 0 },
@@ -137,15 +138,19 @@ export default function App() {
   };
 
   const handleCompileAndPreview = () => {
+    const total = getInvoiceTotal(workingInvoice);
+    const amountPaid = getInvoiceAmountPaid(workingInvoice, total);
+    const savedInvoice = { ...workingInvoice, amountPaid, status: getInvoicePaymentStatus(amountPaid, total) };
+    setWorkingInvoice(savedInvoice);
     // Save or update in invoice collection
     setInvoices(prev => {
-      const idx = prev.findIndex(i => i.id === workingInvoice.id);
+      const idx = prev.findIndex(i => i.id === savedInvoice.id);
       if (idx >= 0) {
         const copy = [...prev];
-        copy[idx] = workingInvoice;
+        copy[idx] = savedInvoice;
         return copy;
       } else {
-        return [workingInvoice, ...prev];
+        return [savedInvoice, ...prev];
       }
     });
     setCurrentView('preview');
@@ -153,17 +158,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleToggleInvoiceStatus = (invId: string) => {
-    setInvoices(prev =>
-      prev.map(inv => {
-        if (inv.id === invId) {
-          const nextStatus = inv.status === 'Paid' ? 'Pending' : 'Paid';
-          showToast(`${inv.id} marked as ${nextStatus}`);
-          return { ...inv, status: nextStatus };
-        }
-        return inv;
-      })
-    );
+  const handleUpdateInvoicePayment = (invId: string, amountPaid: number) => {
+    setInvoices(prev => prev.map(inv => {
+      if (inv.id !== invId) return inv;
+      const total = getInvoiceTotal(inv);
+      const validAmount = Math.min(total, Math.max(0, amountPaid));
+      return { ...inv, amountPaid: validAmount, status: getInvoicePaymentStatus(validAmount, total) };
+    }));
   };
 
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
@@ -205,7 +206,7 @@ export default function App() {
             invoices={invoices}
             onOpenNewInvoice={handleStartNewInvoice}
             onPreviewInvoice={handlePreviewInvoice}
-            onToggleInvoiceStatus={handleToggleInvoiceStatus}
+            onUpdateInvoicePayment={handleUpdateInvoicePayment}
             onOpenSettings={() => setCurrentView('settings')}
           />
         )}
