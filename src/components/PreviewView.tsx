@@ -48,7 +48,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   // Dynamic UPI URL
   const upiUrl = `upi://pay?pa=${encodeURIComponent(workspace.upi)}&pn=${encodeURIComponent(
     workspace.name
-  )}&am=${remainingBalance}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoice.id}`)}`;
+  )}&am=${grandTotal}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoice.id}`)}`;
 
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
     upiUrl
@@ -134,7 +134,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
       {/* DIGITAL INVOICE PREVIEW SHEET (Print Target) */}
       <div
         id="printableInvoice"
-        className="relative w-full rounded-2xl bg-white dark:bg-[#111624] border border-neutral-200/80 dark:border-white/10 shadow-xl overflow-hidden p-5 flex flex-col gap-4 transition-colors"
+        className="premium-invoice relative w-full rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden p-8 flex flex-col gap-6"
       >
         {/* Sheet Header */}
         <div className="flex items-start justify-between gap-2 pt-1">
@@ -166,6 +166,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
           </div>
 
           <div className="flex flex-col items-end">
+            <strong className="invoice-heading">INVOICE</strong>
             <span
               className={`px-2 py-0.5 rounded-full border font-mono text-[9px] uppercase font-semibold tracking-wider ${
                 paymentStatus === 'Paid'
@@ -316,12 +317,12 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 
           {/* Dynamic UPI QR Code */}
           <div className="flex flex-col items-center gap-1 shrink-0">
-            <div className="w-16 h-16 p-1 rounded-xl bg-white shadow-md flex items-center justify-center overflow-hidden border border-neutral-200">
+            <div className="w-28 h-28 p-1 rounded-xl bg-white shadow-sm flex items-center justify-center overflow-hidden border border-neutral-200">
               <img
                 src={qrImageUrl}
                 alt="UPI QR Code"
                 className="w-full h-full object-contain"
-                loading="lazy"
+                loading="eager"
               />
             </div>
           </div>
