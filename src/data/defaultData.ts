@@ -13,7 +13,7 @@ export const FIXED_WORKSPACES: Record<string, Workspace> = {
   },
   pearlio: {
     key: 'pearlio', name: 'Pearlio', initial: 'P', tagline: 'Multi-service Agency',
-    agencyType: 'PDF Editing, Website Design & Video Editing', website: 'pearlio.global', email: 'advisory@pearlio.global',
+    agencyType: 'PDF Editing, Website Design & Video Editing', website: '', email: 'contact.pearlio@gmail.com',
     upi: 'yashashviraj@naviaxis', icon: 'all_inclusive', logoUrl: '/logos/pearlio.png',
   },
 };

@@ -160,7 +160,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
             </div>
             <div className="flex flex-col text-xs text-neutral-500 dark:text-neutral-400 leading-tight gap-0.5">
               <span className="font-medium text-neutral-800 dark:text-neutral-200">
-                {workspace.website || 'zenwebs.io'} • {workspace.email}
+                {workspace.website && <>{workspace.website} • </>}{workspace.email}
               </span>
             </div>
           </div>
