@@ -432,6 +432,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         type="number"
                         min="1"
                         value={item.qty}
+                        onFocus={e => e.currentTarget.select()}
                         onChange={e => handleUpdateItem(index, { qty: Math.max(1, parseInt(e.target.value) || 1) })}
                         readOnly={activeWs.key === 'zen'}
                         className="w-full text-center bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
@@ -458,6 +459,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         min="0"
                         step="500"
                         value={item.rate}
+                        onFocus={e => e.currentTarget.select()}
                         onChange={e => handleUpdateItem(index, { rate: Math.max(0, parseFloat(e.target.value) || 0) })}
                         readOnly={activeWs.key === 'zen'}
                         className="w-full bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
@@ -521,6 +523,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                 min="0"
                 step="1"
                 value={amountPaid}
+                onFocus={e => e.currentTarget.select()}
                 onChange={e => onUpdateInvoice({ ...invoice, amountPaid: Math.max(0, Number(e.target.value) || 0) })}
                 className="w-full bg-transparent font-mono text-sm font-semibold text-neutral-900 dark:text-white outline-none"
                 aria-invalid={Boolean(paymentError)}
