@@ -16,10 +16,10 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
   const [name, setName] = useState('');
   const [tagline, setTagline] = useState('');
   const [website, setWebsite] = useState('');
-  const [agencyType, setAgencyType] = useState('100% Online Digital Agency');
+  const [agencyType, setAgencyType] = useState('');
   const [email, setEmail] = useState('');
   const [upi, setUpi] = useState('');
-  const [bankName, setBankName] = useState('HDFC Bank');
+  const [bankName, setBankName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [bankIfsc, setBankIfsc] = useState('');
 
@@ -41,15 +41,15 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
       key,
       name: name.trim(),
       initial,
-      tagline: tagline.trim() || 'Services & Digital Delivery',
-      agencyType: agencyType.trim() || '100% Online Digital Agency',
-      website: website.trim() || `${key}.agency`,
+      tagline: tagline.trim(),
+      agencyType: agencyType.trim(),
+      website: website.trim(),
       gstin: '',
-      email: email.trim() || `contact@${website.trim() || 'agency.io'}`,
-      upi: upi.trim() || `${key}@upi`,
-      bankName: bankName.trim() || 'HDFC Bank',
-      bankAccount: bankAccount.trim() || '50200000000000',
-      bankIfsc: bankIfsc.trim() || 'HDFC0001000',
+      email: email.trim(),
+      upi: upi.trim(),
+      bankName: bankName.trim(),
+      bankAccount: bankAccount.trim(),
+      bankIfsc: bankIfsc.trim(),
       icon: 'business',
     };
 
@@ -88,7 +88,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
               required
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="e.g. Apex Digital Labs"
+              placeholder="Business or workspace name"
               className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
             />
           </div>
@@ -101,7 +101,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
               type="text"
               value={tagline}
               onChange={e => setTagline(e.target.value)}
-              placeholder="e.g. Brand Consulting & Cloud Engineering"
+              placeholder="What your business does"
               className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
             />
           </div>
@@ -115,7 +115,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
                 type="text"
                 value={website}
                 onChange={e => setWebsite(e.target.value)}
-                placeholder="apexdigital.io"
+                placeholder="Your website"
                 className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
               />
             </div>
@@ -127,7 +127,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="contact@agency.io"
+                placeholder="Business email"
                 className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white font-mono outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
               />
             </div>
@@ -141,7 +141,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
               type="text"
               value={upi}
               onChange={e => setUpi(e.target.value)}
-              placeholder="agency@upi"
+              placeholder="UPI ID"
               className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white font-mono outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
             />
           </div>
@@ -155,7 +155,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
                 type="text"
                 value={bankName}
                 onChange={e => setBankName(e.target.value)}
-                placeholder="HDFC Bank"
+                placeholder="Bank name"
                 className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white outline-none text-xs"
               />
             </div>
@@ -167,7 +167,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
                 type="text"
                 value={bankAccount}
                 onChange={e => setBankAccount(e.target.value)}
-                placeholder="50200..."
+                placeholder="Account number"
                 className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white font-mono outline-none text-xs"
               />
             </div>
@@ -179,7 +179,7 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
                 type="text"
                 value={bankIfsc}
                 onChange={e => setBankIfsc(e.target.value)}
-                placeholder="HDFC0001248"
+                placeholder="IFSC code"
                 className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white font-mono outline-none text-xs"
               />
             </div>

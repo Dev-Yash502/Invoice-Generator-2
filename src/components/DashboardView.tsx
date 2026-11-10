@@ -121,7 +121,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* 2. Active Company Profile Card */}
-      <section className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.05] dark:border-white/10 backdrop-blur-xl shadow-sm p-4 transition-all">
+      {activeWorkspace ? <section className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.05] dark:border-white/10 backdrop-blur-xl shadow-sm p-4 transition-all">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#635bff]/20 via-[#635bff]/10 to-transparent dark:from-[#00f0ff]/20 dark:via-[#571bc1]/20 border border-[#635bff]/30 dark:border-[#00f0ff]/40 flex items-center justify-center shadow-inner overflow-hidden text-[#635bff] dark:text-[#00f0ff] shrink-0">
@@ -140,7 +140,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 {activeWorkspace.name}
               </h2>
               <p className="font-mono text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
-                {activeWorkspace.website || 'online agency'}
+                {activeWorkspace.website || 'Workspace details not added'}
               </p>
             </div>
           </div>
@@ -158,23 +158,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex flex-col">
             <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider">Total</span>
             <span className="font-headline font-bold text-sm text-neutral-900 dark:text-white mt-0.5">
-              {formatINR(totalAmount)}
+              {workspaceInvoices.length ? formatINR(totalAmount) : '—'}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="font-mono text-[10px] text-teal-600 dark:text-emerald-400 uppercase tracking-wider">Settled</span>
             <span className="font-headline font-bold text-sm text-teal-600 dark:text-emerald-400 mt-0.5">
-              {formatINR(paidAmount)}
+              {workspaceInvoices.length ? formatINR(paidAmount) : '—'}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="font-mono text-[10px] text-[#635bff] dark:text-[#00f0ff] uppercase tracking-wider">Pending</span>
             <span className="font-headline font-bold text-sm text-[#635bff] dark:text-[#00f0ff] mt-0.5">
-              {formatINR(pendingAmount)}
+              {workspaceInvoices.length ? formatINR(pendingAmount) : '—'}
             </span>
           </div>
         </div>
-      </section>
+      </section> : (
+        <section className="rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-dashed border-neutral-300 dark:border-white/10 p-6 text-center">
+          <h2 className="font-headline font-semibold text-sm text-neutral-900 dark:text-white">Set up a workspace</h2>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Add your business details to start creating invoices.</p>
+          <button onClick={onAddNewWorkspace} className="mt-3 px-3 py-1.5 rounded-xl bg-[#635bff] dark:bg-[#00f0ff] text-white dark:text-[#002022] font-headline font-bold text-xs">Add Workspace</button>
+        </section>
+      )}
 
       {/* 3. Invoices Section */}
       <div className="flex flex-col space-y-2 pt-1">
@@ -231,7 +237,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {filteredInvoices.length === 0 ? (
             <div className="rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-dashed border-neutral-300 dark:border-white/10 p-6 text-center flex flex-col items-center justify-center">
               <p className="font-headline font-semibold text-xs text-neutral-500 dark:text-neutral-400">
-                No invoices found
+                {workspaceInvoices.length === 0 ? 'No invoices yet' : 'No invoices match your search'}
               </p>
             </div>
           ) : (

@@ -18,13 +18,14 @@ import {
   Building2
 } from 'lucide-react';
 import { Workspace, Invoice, LineItem, ClientPreset } from '../types';
-import { CLIENT_PRESETS, formatINR } from '../data/defaultData';
+import { formatINR } from '../data/defaultData';
 
 interface EditorViewProps {
   workspaces: Record<string, Workspace>;
   activeWorkspaceKey: string;
   onSelectWorkspace: (key: string) => void;
   invoice: Invoice;
+  clients: ClientPreset[];
   onUpdateInvoice: (updated: Invoice) => void;
   onPreview: () => void;
 }
@@ -34,6 +35,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
   activeWorkspaceKey,
   onSelectWorkspace,
   invoice,
+  clients,
   onUpdateInvoice,
   onPreview,
 }) => {
@@ -41,6 +43,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
   const [directoryModalOpen, setDirectoryModalOpen] = useState(false);
 
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
+  if (!activeWs) return null;
 
   // Calculations
   const subtotal = invoice.items.reduce((s, it) => s + (Number(it.qty) || 0) * (Number(it.rate) || 0), 0);
@@ -50,22 +53,14 @@ export const EditorView: React.FC<EditorViewProps> = ({
   // Actions
   const handleRegenerateId = () => {
     const rnd = Math.floor(100 + Math.random() * 900);
-    const prefix = activeWs.key === 'zen' ? 'INV' : activeWs.key === 'pearlio-col' ? 'PC' : 'PRL';
     onUpdateInvoice({
       ...invoice,
-      id: `#${prefix}-2024-${rnd}`,
+      id: `INV-${new Date().getFullYear()}-${rnd}`,
     });
   };
 
-  const handleApplyPreset = (preset: ClientPreset) => {
-    onUpdateInvoice({
-      ...invoice,
-      clientName: preset.name,
-      clientCompany: preset.company || '',
-      clientPhone: preset.phone,
-      clientEmail: preset.email,
-      clientAvatar: preset.avatar,
-    });
+  const handleApplyClient = (client: ClientPreset) => {
+    onUpdateInvoice({ ...invoice, clientName: client.name, clientCompany: client.company || '', clientPhone: client.phone, clientEmail: client.email, clientAvatar: client.avatar || '' });
     setDirectoryModalOpen(false);
   };
 
@@ -84,10 +79,10 @@ export const EditorView: React.FC<EditorViewProps> = ({
   const handleAddItem = () => {
     const newItem: LineItem = {
       id: Date.now().toString(),
-      desc: 'Consulting & Technical Advisory',
-      notes: 'Milestone completion & documentation',
+      desc: '',
+      notes: '',
       qty: 1,
-      rate: 5000,
+      rate: 0,
     };
     onUpdateInvoice({
       ...invoice,
@@ -135,7 +130,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                 {activeWs.name}
               </span>
               <span className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 truncate">
-                {activeWs.website || 'Online Digital Agency'}
+                {activeWs.website || 'Workspace details not added'}
               </span>
             </div>
           </div>
@@ -302,7 +297,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                   type="tel"
                   value={invoice.clientPhone}
                   onChange={e => onUpdateInvoice({ ...invoice, clientPhone: e.target.value })}
-                  placeholder="+91 98765 43210"
+                  placeholder="Phone number"
                   className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl pl-8 pr-2 py-2 text-neutral-900 dark:text-white font-mono text-xs outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]/60"
                 />
               </div>
@@ -317,7 +312,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                   type="email"
                   value={invoice.clientEmail}
                   onChange={e => onUpdateInvoice({ ...invoice, clientEmail: e.target.value })}
-                  placeholder="client@domain.com"
+                  placeholder="Email address"
                   className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl pl-8 pr-2 py-2 text-neutral-900 dark:text-white font-mono text-xs outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]/60"
                 />
               </div>
@@ -561,27 +556,15 @@ export const EditorView: React.FC<EditorViewProps> = ({
               </button>
             </div>
 
-            <div className="flex flex-col gap-2">
-              {CLIENT_PRESETS.map((preset, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleApplyPreset(preset)}
-                  className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 text-left transition-colors border border-transparent hover:border-neutral-200 dark:hover:border-white/10"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-white/10 flex items-center justify-center font-bold text-xs text-neutral-700 dark:text-neutral-200 shrink-0">
-                    {preset.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-headline font-semibold text-xs text-neutral-900 dark:text-white truncate">
-                      {preset.name}
-                    </p>
-                    <p className="text-[10px] text-neutral-500 truncate">{preset.company || preset.email}</p>
-                    <p className="font-mono text-[10px] text-neutral-400 truncate mt-0.5">{preset.phone}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {clients.length === 0 ? (
+              <div className="py-6 text-center text-xs text-neutral-500 dark:text-neutral-400">No saved clients yet</div>
+            ) : clients.map(client => (
+              <button key={client.name.toLowerCase()} type="button" onClick={() => handleApplyClient(client)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 text-left transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-white/10 flex items-center justify-center font-bold text-xs text-neutral-700 dark:text-neutral-200 shrink-0">{client.name.charAt(0)}</div>
+                <div className="min-w-0"><p className="font-headline font-semibold text-xs text-neutral-900 dark:text-white truncate">{client.name}</p><p className="text-[10px] text-neutral-500 truncate">{client.company || client.email}</p><p className="font-mono text-[10px] text-neutral-400 truncate mt-0.5">{client.phone}</p></div>
+              </button>
+            ))}
+
           </div>
         </div>
       )}

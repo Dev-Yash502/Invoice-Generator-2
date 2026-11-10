@@ -4,8 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Workspace, Invoice, LineItem } from './types';
-import { DEFAULT_WORKSPACES, DEFAULT_INVOICES } from './data/defaultData';
+import { Workspace, Invoice, LineItem, ClientPreset } from './types';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
@@ -44,23 +43,21 @@ export default function App() {
     const saved = localStorage.getItem('qb_workspaces');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        Object.keys(DEFAULT_WORKSPACES).forEach(k => {
-          if (parsed[k] && DEFAULT_WORKSPACES[k].logoUrl) {
-            parsed[k].logoUrl = DEFAULT_WORKSPACES[k].logoUrl;
-          }
+        const parsed = JSON.parse(saved) as Record<string, Workspace>;
+        const seededProfiles: Record<string, string> = { zen: 'Zen Webs Studio', 'pearlio-col': 'Pearlio Collections', pearlio: 'Pearlio Global' };
+        Object.entries(seededProfiles).forEach(([key, name]) => {
+          if (parsed[key]?.name === name) delete parsed[key];
         });
         return parsed;
-      } catch (e) {
-        // fallback
       }
+      catch { return {}; }
     }
-    return DEFAULT_WORKSPACES;
+    return {};
   });
 
   const [activeWorkspaceKey, setActiveWorkspaceKey] = useState<string>(() => {
     const saved = localStorage.getItem('qb_active_ws');
-    return saved && workspaces[saved] ? saved : 'zen';
+    return saved && workspaces[saved] ? saved : Object.keys(workspaces)[0] || '';
   });
 
   useEffect(() => {
@@ -76,12 +73,13 @@ export default function App() {
     const saved = localStorage.getItem('qb_invoices');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const demoIds = new Set(['#INV-2024-001','#INV-2024-002','#INV-2024-003','#INV-2024-004','#PC-2024-108','#PC-2024-109','#PC-2024-110','#PRL-089','#PRL-090']);
+        return (JSON.parse(saved) as Invoice[]).filter(invoice => !demoIds.has(invoice.id));
       } catch (e) {
         // fallback
       }
     }
-    return DEFAULT_INVOICES;
+    return [];
   });
 
   useEffect(() => {
@@ -103,39 +101,25 @@ export default function App() {
   // Active working invoice
   const createNewInvoiceDraft = (wsKey: string): Invoice => {
     const rnd = Math.floor(100 + Math.random() * 900);
-    const prefix = wsKey === 'zen' ? 'INV' : wsKey === 'pearlio-col' ? 'PC' : 'PRL';
     const today = new Date();
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 7);
 
     return {
-      id: `#${prefix}-2024-${rnd}`,
+      id: `INV-${today.getFullYear()}-${rnd}`,
       issueDate: today.toISOString().split('T')[0],
       dueDate: dueDate.toISOString().split('T')[0],
-      clientName: 'Ananya Patel',
-      clientPhone: '+91 98450 12890',
-      clientEmail: 'ananya@studiopatel.in',
-      clientCompany: 'Studio Patel Architecture',
-      clientAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
-      status: 'Pending',
+      clientName: '',
+      clientPhone: '',
+      clientEmail: '',
+      clientCompany: '',
+      clientAvatar: '',
+      status: 'Draft',
       workspaceKey: wsKey,
       gstEnabled: true,
       gstRate: defaultGstRate,
       items: [
-        {
-          id: '1',
-          desc: 'UI/UX Mobile Design',
-          notes: 'Design System & High-Fi Prototypes',
-          qty: 2,
-          rate: 12000,
-        },
-        {
-          id: '2',
-          desc: 'Cloud Hosting & Domain Setup',
-          notes: 'Annual DNS, SSL & CDN Deployment',
-          qty: 1,
-          rate: 12000,
-        },
+        { id: '1', desc: '', notes: '', qty: 1, rate: 0 },
       ],
     };
   };
@@ -164,6 +148,7 @@ export default function App() {
   };
 
   const handleStartNewInvoice = () => {
+    if (!Object.keys(workspaces).length) { setIsAddWsOpen(true); return; }
     const draft = createNewInvoiceDraft(activeWorkspaceKey);
     setWorkingInvoice(draft);
     setCurrentView('editor');
@@ -218,21 +203,28 @@ export default function App() {
     showToast(`Added workspace: ${newWs.name}`);
   };
 
-  const handleResetDemoData = () => {
-    setWorkspaces(DEFAULT_WORKSPACES);
-    setActiveWorkspaceKey('zen');
-    setInvoices(DEFAULT_INVOICES);
+  const handleClearLocalData = () => {
+    setWorkspaces({});
+    setActiveWorkspaceKey('');
+    setInvoices([]);
     setDefaultGstRate(18);
-    setWorkingInvoice(createNewInvoiceDraft('zen'));
+    setWorkingInvoice(createNewInvoiceDraft(''));
     localStorage.removeItem('qb_workspaces');
     localStorage.removeItem('qb_active_ws');
     localStorage.removeItem('qb_invoices');
     localStorage.removeItem('qb_gst_rate');
     setCurrentView('dashboard');
-    showToast('Demo data restored to defaults');
+    showToast('Local data cleared');
   };
 
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
+  const savedClients = Object.values(invoices.reduce<Record<string, ClientPreset>>((clients, invoice) => {
+    if (invoice.clientName?.trim()) {
+      const key = invoice.clientName.trim().toLowerCase();
+      clients[key] = { name: invoice.clientName, company: invoice.clientCompany, phone: invoice.clientPhone, email: invoice.clientEmail, avatar: invoice.clientAvatar };
+    }
+    return clients;
+  }, {}));
 
   return (
     <div className="bg-[#f7f9fe] text-[#181c20] dark:bg-[#0a0e18] dark:text-[#dfe2f1] font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
@@ -276,14 +268,15 @@ export default function App() {
             activeWorkspaceKey={activeWorkspaceKey}
             onSelectWorkspace={setActiveWorkspaceKey}
             invoice={workingInvoice}
+            clients={savedClients}
             onUpdateInvoice={setWorkingInvoice}
             onPreview={handleCompileAndPreview}
           />
         )}
 
-        {currentView === 'preview' && (
+        {currentView === 'preview' && activeWs && (
           <PreviewView
-            workspace={activeWs}
+            workspace={activeWs!}
             invoice={workingInvoice}
             onEdit={() => setCurrentView('editor')}
             onShowReceipt={() => setIsReceiptOpen(true)}
@@ -299,18 +292,18 @@ export default function App() {
             activeWorkspaceKey={activeWorkspaceKey}
             onSelectWorkspace={setActiveWorkspaceKey}
             onOpenAddWorkspace={() => setIsAddWsOpen(true)}
-            onResetDemoData={handleResetDemoData}
+            onClearLocalData={handleClearLocalData}
           />
         )}
       </main>
 
       {/* Payment Clearance Slip (Receipt Modal) */}
-      <ReceiptModal
+      {activeWs && <ReceiptModal
         isOpen={isReceiptOpen}
         onClose={() => setIsReceiptOpen(false)}
         invoice={workingInvoice}
         workspace={activeWs}
-      />
+      />}
 
       {/* New Workspace Modal */}
       <NewWorkspaceModal

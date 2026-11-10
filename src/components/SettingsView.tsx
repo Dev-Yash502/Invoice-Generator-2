@@ -15,7 +15,7 @@ interface SettingsViewProps {
   activeWorkspaceKey: string;
   onSelectWorkspace: (key: string) => void;
   onOpenAddWorkspace: () => void;
-  onResetDemoData: () => void;
+  onClearLocalData: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -25,7 +25,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   activeWorkspaceKey,
   onSelectWorkspace,
   onOpenAddWorkspace,
-  onResetDemoData,
+  onClearLocalData,
 }) => {
   return (
     <div className="flex flex-col w-full pb-8 pt-2 space-y-3.5">
@@ -78,6 +78,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         <div className="flex flex-col gap-2">
+          {Object.keys(workspaces).length === 0 && (
+            <p className="py-4 text-center text-xs text-neutral-500 dark:text-neutral-400">No workspaces added yet.</p>
+          )}
           {Object.values(workspaces).map(ws => {
             const isCurrent = ws.key === activeWorkspaceKey;
             return (
@@ -123,15 +126,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Reset Demo State */}
+      {/* Clear Stored Data */}
       <div className="text-center pt-2">
         <button
-          onClick={onResetDemoData}
+          onClick={onClearLocalData}
           type="button"
           className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-red-500 font-mono text-xs transition-colors cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset Demo Data</span>
+          <span>Clear Local Data</span>
         </button>
       </div>
     </div>

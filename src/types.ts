@@ -45,5 +45,5 @@ export interface ClientPreset {
   phone: string;
   email: string;
   company?: string;
-  avatar: string;
+  avatar?: string;
 }

@@ -8,7 +8,7 @@ interface HeaderProps {
   onOpenSettings: () => void;
   isDark: boolean;
   onToggleTheme: () => void;
-  activeWorkspace: Workspace;
+  activeWorkspace?: Workspace;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -61,16 +61,16 @@ export const Header: React.FC<HeaderProps> = ({
                 {title}
               </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#635bff]/10 dark:bg-white/[0.08] text-[#493ee5] dark:text-[#00f0ff] font-mono text-[10px] font-semibold uppercase tracking-wider">
-                {activeWorkspace.logoUrl ? (
+                {activeWorkspace?.logoUrl ? (
                   <img
                     src={activeWorkspace.logoUrl}
-                    alt={activeWorkspace.name}
+                    alt={activeWorkspace?.name || 'Workspace'}
                     className="w-3.5 h-3.5 rounded-full object-cover shrink-0"
                   />
                 ) : (
                   <Building2 className="w-3 h-3" />
                 )}
-                <span>{activeWorkspace.name.split(' ')[0]}</span>
+                <span>{activeWorkspace?.name.split(' ')[0] || 'Workspace'}</span>
               </span>
             </div>
           </div>
