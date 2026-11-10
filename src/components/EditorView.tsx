@@ -204,7 +204,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className="block font-mono text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">
-              Invoice ID
+              Invoice Number
             </label>
             <div className="relative flex items-center">
               <input
@@ -321,7 +321,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
           <div>
             <label className="block font-mono text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">
-              Company (Optional)
+              Company Name
             </label>
             <div className="relative flex items-center">
               <Building2 className="w-4 h-4 text-neutral-400 absolute left-3" />
@@ -368,7 +368,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       value={item.desc}
                       onChange={e => handleUpdateItem(index, { desc: e.target.value })}
                       className="w-full bg-transparent font-headline font-semibold text-sm text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400"
-                      placeholder="Item description"
+                      placeholder="Work / Service Description"
                     />
                     <input
                       type="text"
@@ -422,7 +422,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
                   <div className="col-span-4 flex flex-col">
                     <span className="font-mono text-[9px] text-neutral-500 dark:text-neutral-400 mb-0.5">
-                      Rate (₹)
+                      Price / Amount (₹)
                     </span>
                     <div className="flex items-center bg-white dark:bg-[#0a0e18] rounded-lg px-2 py-1 border border-neutral-200/60 dark:border-white/[0.08]">
                       <span className="text-[#635bff] dark:text-[#00f0ff] font-mono text-xs mr-0.5">₹</span>

@@ -19,9 +19,6 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
   const [agencyType, setAgencyType] = useState('');
   const [email, setEmail] = useState('');
   const [upi, setUpi] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [bankAccount, setBankAccount] = useState('');
-  const [bankIfsc, setBankIfsc] = useState('');
 
   if (!isOpen) return null;
 
@@ -47,9 +44,6 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
       gstin: '',
       email: email.trim(),
       upi: upi.trim(),
-      bankName: bankName.trim(),
-      bankAccount: bankAccount.trim(),
-      bankIfsc: bankIfsc.trim(),
       icon: 'business',
     };
 
@@ -144,45 +138,6 @@ export const NewWorkspaceModal: React.FC<NewWorkspaceModalProps> = ({
               placeholder="UPI ID"
               className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-900 dark:text-white font-mono outline-none focus:border-[#635bff] dark:focus:border-[#00f0ff]"
             />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="block font-mono text-[9px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                value={bankName}
-                onChange={e => setBankName(e.target.value)}
-                placeholder="Bank name"
-                className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white outline-none text-xs"
-              />
-            </div>
-            <div>
-              <label className="block font-mono text-[9px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-                A/C Number
-              </label>
-              <input
-                type="text"
-                value={bankAccount}
-                onChange={e => setBankAccount(e.target.value)}
-                placeholder="Account number"
-                className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white font-mono outline-none text-xs"
-              />
-            </div>
-            <div>
-              <label className="block font-mono text-[9px] font-semibold text-neutral-500 uppercase tracking-wider mb-1">
-                IFSC Code
-              </label>
-              <input
-                type="text"
-                value={bankIfsc}
-                onChange={e => setBankIfsc(e.target.value)}
-                placeholder="IFSC code"
-                className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-2 text-neutral-900 dark:text-white font-mono outline-none text-xs"
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-2">

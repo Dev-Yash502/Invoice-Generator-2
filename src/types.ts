@@ -33,9 +33,6 @@ export interface Workspace {
   gstin?: string;
   email: string;
   upi: string;
-  bankName: string;
-  bankAccount: string;
-  bankIfsc: string;
   icon: string; // icon name
   logoUrl?: string;
 }

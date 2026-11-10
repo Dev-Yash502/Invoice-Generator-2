@@ -4,7 +4,6 @@ import {
   Plus, 
   Sun, 
   Moon, 
-  RotateCcw 
 } from 'lucide-react';
 import { Workspace } from '../types';
 
@@ -15,7 +14,6 @@ interface SettingsViewProps {
   activeWorkspaceKey: string;
   onSelectWorkspace: (key: string) => void;
   onOpenAddWorkspace: () => void;
-  onClearLocalData: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -25,7 +23,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   activeWorkspaceKey,
   onSelectWorkspace,
   onOpenAddWorkspace,
-  onClearLocalData,
 }) => {
   return (
     <div className="flex flex-col w-full pb-8 pt-2 space-y-3.5">
@@ -126,17 +123,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Clear Stored Data */}
-      <div className="text-center pt-2">
-        <button
-          onClick={onClearLocalData}
-          type="button"
-          className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-red-500 font-mono text-xs transition-colors cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Clear Local Data</span>
-        </button>
-      </div>
     </div>
   );
 };

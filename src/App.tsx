@@ -203,20 +203,6 @@ export default function App() {
     showToast(`Added workspace: ${newWs.name}`);
   };
 
-  const handleClearLocalData = () => {
-    setWorkspaces({});
-    setActiveWorkspaceKey('');
-    setInvoices([]);
-    setDefaultGstRate(18);
-    setWorkingInvoice(createNewInvoiceDraft(''));
-    localStorage.removeItem('qb_workspaces');
-    localStorage.removeItem('qb_active_ws');
-    localStorage.removeItem('qb_invoices');
-    localStorage.removeItem('qb_gst_rate');
-    setCurrentView('dashboard');
-    showToast('Local data cleared');
-  };
-
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
   const savedClients = Object.values(invoices.reduce<Record<string, ClientPreset>>((clients, invoice) => {
     if (invoice.clientName?.trim()) {
@@ -292,7 +278,6 @@ export default function App() {
             activeWorkspaceKey={activeWorkspaceKey}
             onSelectWorkspace={setActiveWorkspaceKey}
             onOpenAddWorkspace={() => setIsAddWsOpen(true)}
-            onClearLocalData={handleClearLocalData}
           />
         )}
       </main>

@@ -72,7 +72,10 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 
   const handleShareEmail = () => {
     const subject = `Invoice ${invoice.id} from ${workspace.name}`;
-    const body = `Dear ${invoice.clientName},\n\nPlease find your invoice summary below:\n\nInvoice Number: ${invoice.id}\nIssue Date: ${invoice.issueDate}\nDue Date: ${invoice.dueDate}\nTotal Due: ${formatINR(grandTotal)}\n\nPayment Details:\nUPI VPA: ${workspace.upi}\nBank: ${workspace.bankName}\nAccount: ${workspace.bankAccount}\nIFSC: ${workspace.bankIfsc}\n\nPlease let us know once the transfer is completed.\n\nWarm regards,\n${workspace.name}`;
+    const lineItems = invoice.items
+      .map(item => `${item.desc}: ${item.qty} × ${formatINR(item.rate)} = ${formatINR(item.qty * item.rate)}`)
+      .join('\n');
+    const body = `Dear ${invoice.clientName},\n\nPlease find your invoice summary below:\n\nInvoice Number: ${invoice.id}\nCompany Name: ${invoice.clientCompany || '—'}\nClient Name: ${invoice.clientName || '—'}\nIssue Date: ${invoice.issueDate}\nDue Date: ${invoice.dueDate}\n\nWork / Service Description and Amount:\n${lineItems}\n\nTotal Due: ${formatINR(grandTotal)}\n\nPayment Details:\nUPI VPA: ${workspace.upi}\n\nPlease let us know once the transfer is completed.\n\nWarm regards,\n${workspace.name}`;
     window.location.href = `mailto:${invoice.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -191,9 +194,16 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
             <span className="font-headline font-semibold text-sm text-neutral-900 dark:text-white truncate mt-0.5">
               {invoice.clientName}
             </span>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
-              {invoice.clientCompany ? `${invoice.clientCompany} • ` : ''}{invoice.clientEmail}
-            </span>
+            {invoice.clientCompany && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
+                {invoice.clientCompany}
+              </span>
+            )}
+            {invoice.clientEmail && (
+              <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                {invoice.clientEmail}
+              </span>
+            )}
           </div>
           <div className="flex flex-col items-end shrink-0 pl-1 font-mono">
             <span className="text-[11px] text-neutral-600 dark:text-neutral-300 font-medium">
@@ -299,12 +309,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                     <Copy className="w-3 h-3 opacity-60" />
                   )}
                 </span>
-              </div>
-              <div className="text-[10px] text-neutral-500">
-                {workspace.bankName} • {workspace.bankIfsc}
-              </div>
-              <div className="text-[10px] text-neutral-500 font-mono">
-                A/C: {workspace.bankAccount}
               </div>
             </div>
           </div>
