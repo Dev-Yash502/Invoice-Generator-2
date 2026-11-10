@@ -319,7 +319,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
           <div className="flex flex-col items-center gap-1 shrink-0">
             <div className="w-28 h-28 p-1 rounded-xl bg-white shadow-sm flex items-center justify-center overflow-hidden border border-neutral-200">
               <img
-                src={qrImageUrl}
+                src="/logos/qr.png.jpg"
                 alt="UPI QR Code"
                 className="w-full h-full object-contain"
                 loading="eager"
