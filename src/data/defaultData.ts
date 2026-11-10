@@ -14,7 +14,7 @@ export const FIXED_WORKSPACES: Record<string, Workspace> = {
   pearlio: {
     key: 'pearlio', name: 'Pearlio', initial: 'P', tagline: 'Multi-service Agency',
     agencyType: 'PDF Editing, Website Design & Video Editing', website: 'pearlio.global', email: 'advisory@pearlio.global',
-    upi: 'pearlioglobal@hdfcbank', icon: 'all_inclusive', logoUrl: '/logos/pearlio.png',
+    upi: 'yashashviraj@naviaxis', icon: 'all_inclusive', logoUrl: '/logos/pearlio.png',
   },
 };
 
