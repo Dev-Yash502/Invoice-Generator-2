@@ -3,13 +3,13 @@ import { Workspace } from '../types';
 export const FIXED_WORKSPACES: Record<string, Workspace> = {
   zen: {
     key: 'zen', name: 'Zen Webs Studio', initial: 'Z', tagline: 'Video Editing Agency',
-    agencyType: 'Video Editing Agency', website: 'zenwebs.io', email: 'contact@zenwebs.io',
-    upi: 'zenwebs@upi', icon: 'laptop_mac', logoUrl: '/logos/zen%20webs.jpg',
+    agencyType: 'Video Editing Agency', website: 'zenwebs.studio', email: 'contact@zenwebs.studio',
+    upi: 'zenwebs@upi', icon: 'laptop_mac', logoUrl: '/logos/zen-avatar.jpeg',
   },
   'pearlio-col': {
     key: 'pearlio-col', name: 'Pearlio Collections', initial: 'P', tagline: 'Artisan Decor & Home Lifestyle',
     agencyType: 'Direct-to-Consumer Online Store', website: 'pearlio.store', email: 'hello@pearlio.store',
-    upi: 'pearlio@icici', icon: 'storefront', logoUrl: '/logos/pearlio%20collections.png',
+    upi: 'pearlio@icici', icon: 'storefront', logoUrl: '/logos/pearlio-collections-avatar.jpeg',
   },
   pearlio: {
     key: 'pearlio', name: 'Pearlio', initial: 'P', tagline: 'Multi-service Agency',

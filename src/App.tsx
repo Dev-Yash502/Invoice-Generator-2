@@ -43,7 +43,7 @@ export default function App() {
 
   const [activeWorkspaceKey, setActiveWorkspaceKey] = useState<string>(() => {
     const saved = localStorage.getItem('qb_active_ws');
-    return saved && workspaces[saved] ? saved : 'zen';
+    return saved && workspaces[saved] ? saved : 'pearlio';
   });
 
   useEffect(() => {
@@ -69,14 +69,26 @@ export default function App() {
   }, [invoices]);
 
   // Active working invoice
-  const createNewInvoiceDraft = (wsKey: string): Invoice => {
-    const rnd = Math.floor(100 + Math.random() * 900);
+  const issueInvoiceNumber = (wsKey: string): string => {
+    const year = new Date().getFullYear();
+    const prefix = wsKey === 'zen' ? 'ZEN' : wsKey === 'pearlio-col' ? 'PC' : 'PRL';
+    const storageKey = `qb_invoice_seq_${wsKey}_${year}`;
+    const pattern = new RegExp(`^${prefix}-${year}-(\\d+)$`);
+    const highestExisting = invoices
+      .filter(invoice => invoice.workspaceKey === wsKey)
+      .reduce((highest, invoice) => Math.max(highest, Number(invoice.id.match(pattern)?.[1] || 0)), 0);
+    const sequence = Math.max(Number(localStorage.getItem(storageKey)) || 1, highestExisting + 1);
+    localStorage.setItem(storageKey, String(sequence + 1));
+    return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`;
+  };
+
+  const createNewInvoiceDraft = (wsKey: string, id = ''): Invoice => {
     const today = new Date();
     const dueDate = new Date();
     dueDate.setDate(today.getDate() + 7);
 
     return {
-      id: `INV-${today.getFullYear()}-${rnd}`,
+      id,
       issueDate: today.toISOString().split('T')[0],
       dueDate: dueDate.toISOString().split('T')[0],
       clientName: '',
@@ -116,7 +128,7 @@ export default function App() {
   };
 
   const handleStartNewInvoice = () => {
-    const draft = createNewInvoiceDraft(activeWorkspaceKey);
+    const draft = createNewInvoiceDraft(activeWorkspaceKey, issueInvoiceNumber(activeWorkspaceKey));
     setWorkingInvoice(draft);
     setCurrentView('editor');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -131,12 +143,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleEditorSelectWorkspace = (key: string) => {
-    if (!workspaces[key]) return;
-    setActiveWorkspaceKey(key);
-    setWorkingInvoice(current => ({ ...current, workspaceKey: key }));
-  };
-
   const handleCompileAndPreview = () => {
     const total = getInvoiceTotal(workingInvoice);
     const amountPaid = getInvoiceAmountPaid(workingInvoice, total);
@@ -144,7 +150,7 @@ export default function App() {
     setWorkingInvoice(savedInvoice);
     // Save or update in invoice collection
     setInvoices(prev => {
-      const idx = prev.findIndex(i => i.id === savedInvoice.id);
+      const idx = prev.findIndex(i => i.id === savedInvoice.id && i.workspaceKey === savedInvoice.workspaceKey);
       if (idx >= 0) {
         const copy = [...prev];
         copy[idx] = savedInvoice;
@@ -177,7 +183,7 @@ export default function App() {
   }, {}));
 
   return (
-    <div className="bg-[#f7f9fe] text-[#181c20] dark:bg-[#0a0e18] dark:text-[#dfe2f1] font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+    <div className="bg-[#f4f6ff] text-[#181c20] dark:bg-[#0a0e18] dark:text-[#dfe2f1] font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
       {/* Toast Notification */}
       <Toast message={toastMessage} />
 
@@ -213,9 +219,7 @@ export default function App() {
 
         {currentView === 'editor' && (
           <EditorView
-            workspaces={workspaces}
             activeWorkspaceKey={activeWorkspaceKey}
-            onSelectWorkspace={handleEditorSelectWorkspace}
             invoice={workingInvoice}
             clients={savedClients}
             onUpdateInvoice={setWorkingInvoice}

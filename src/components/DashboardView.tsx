@@ -6,7 +6,9 @@ import {
   Building,
   Store,
   Infinity as InfinityIcon,
-  Laptop
+  Laptop,
+  Check,
+  X
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
 import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from '../data/defaultData';
@@ -34,6 +36,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Partially Paid' | 'Unpaid'>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  // Bug #4 fix: replace window.prompt with inline editing state
+  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
+  const [editingPaymentValue, setEditingPaymentValue] = useState('');
 
   const activeWorkspace = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
   const workspaceInvoices = invoices.filter(inv => inv.workspaceKey === activeWorkspaceKey);
@@ -83,7 +88,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <img
                   src={ws.logoUrl}
                   alt={ws.name}
-                  className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10 dark:border-white/20"
+                  className="w-4 h-4 rounded-full object-contain shrink-0"
                 />
               ) : (
                 renderWorkspaceIcon(ws.key, 'w-3.5 h-3.5')
@@ -98,15 +103,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {activeWorkspace ? <section className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.05] dark:border-white/10 backdrop-blur-xl shadow-sm p-4 transition-all">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#635bff]/20 via-[#635bff]/10 to-transparent dark:from-[#00f0ff]/20 dark:via-[#571bc1]/20 border border-[#635bff]/30 dark:border-[#00f0ff]/40 flex items-center justify-center shadow-inner overflow-hidden text-[#635bff] dark:text-[#00f0ff] shrink-0">
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shrink-0">
               {activeWorkspace.logoUrl ? (
                 <img
                   src={activeWorkspace.logoUrl}
                   alt={activeWorkspace.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                renderWorkspaceIcon(activeWorkspace.key, 'w-6 h-6')
+                <div className="w-full h-full rounded-xl bg-gradient-to-br from-[#635bff]/20 via-[#635bff]/10 to-transparent dark:from-[#00f0ff]/20 dark:via-[#571bc1]/20 border border-[#635bff]/30 dark:border-[#00f0ff]/40 flex items-center justify-center shadow-inner text-[#635bff] dark:text-[#00f0ff]">
+                  {renderWorkspaceIcon(activeWorkspace.key, 'w-6 h-6')}
+                </div>
               )}
             </div>
             <div className="flex flex-col min-w-0">
@@ -250,31 +257,76 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <span className="font-headline font-bold text-base text-neutral-900 dark:text-white tracking-tight">
                         {formatINR(grand)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const entered = window.prompt(`Amount paid so far (total ${formatINR(grand)}):`, String(paid));
-                          if (entered === null) return;
-                          const nextPaid = Number(entered);
-                          if (!Number.isFinite(nextPaid) || nextPaid < 0 || nextPaid > grand) {
-                            window.alert(`Enter an amount from ₹0 to ${formatINR(grand)}.`);
-                            return;
-                          }
-                          onUpdateInvoicePayment(inv.id, nextPaid);
-                        }}
-                        title="Update payment amount"
-                        className={`mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${badgeClass} font-mono text-[10px] font-semibold hover:opacity-85 transition-opacity`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            status === 'Paid'
-                              ? 'bg-teal-500 dark:bg-emerald-400'
-                              : status === 'Partially Paid' ? 'bg-amber-500' : 'bg-[#635bff] dark:bg-purple-400'
-                          }`}
-                        />
-                        <span>{status}</span>
-                      </button>
+                      {/* Bug #4 fix: inline payment editor instead of window.prompt */}
+                      {editingPaymentId === inv.id ? (
+                        <div
+                          className="flex items-center gap-1 mt-1.5"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <span className="text-[10px] text-neutral-400 font-mono">₹</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={grand}
+                            value={editingPaymentValue}
+                            autoFocus
+                            onChange={e => setEditingPaymentValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') {
+                                const v = Number(editingPaymentValue);
+                                if (Number.isFinite(v) && v >= 0 && v <= grand) {
+                                  onUpdateInvoicePayment(inv.id, v);
+                                }
+                                setEditingPaymentId(null);
+                              } else if (e.key === 'Escape') {
+                                setEditingPaymentId(null);
+                              }
+                            }}
+                            className="w-20 bg-white dark:bg-black/40 border border-[#635bff]/40 rounded-lg px-1.5 py-0.5 font-mono text-xs text-neutral-900 dark:text-white outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={e => {
+                              e.stopPropagation();
+                              const v = Number(editingPaymentValue);
+                              if (Number.isFinite(v) && v >= 0 && v <= grand) {
+                                onUpdateInvoicePayment(inv.id, v);
+                              }
+                              setEditingPaymentId(null);
+                            }}
+                            className="text-teal-600 hover:text-teal-700"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={e => { e.stopPropagation(); setEditingPaymentId(null); }}
+                            className="text-neutral-400 hover:text-red-500"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPaymentId(inv.id);
+                            setEditingPaymentValue(String(paid));
+                          }}
+                          title="Update payment amount"
+                          className={`mt-1.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border ${badgeClass} font-mono text-[10px] font-semibold hover:opacity-85 transition-opacity`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              status === 'Paid'
+                                ? 'bg-teal-500 dark:bg-emerald-400'
+                                : status === 'Partially Paid' ? 'bg-amber-500' : 'bg-[#635bff] dark:bg-purple-400'
+                            }`}
+                          />
+                          <span>{status}</span>
+                        </button>
+                      )}
                       <span className="mt-1 text-[10px] text-neutral-500 font-mono">Paid {formatINR(paid)} · Due {formatINR(balance)}</span>
                     </div>
                   </div>

@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+/android-native/
+node_modules/
+.env

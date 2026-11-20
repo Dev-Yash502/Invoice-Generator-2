@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
-  ArrowRightLeft, 
   ReceiptText, 
-  RotateCw, 
-  BadgeCheck, 
   Contact, 
   User, 
   Phone, 
@@ -16,13 +13,11 @@ import {
   CheckCircle2,
   Building2
 } from 'lucide-react';
-import { Workspace, Invoice, LineItem, ClientPreset } from '../types';
-import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, ZEN_VIDEO_PACKAGES } from '../data/defaultData';
+import { Invoice, LineItem, ClientPreset } from '../types';
+import { FIXED_WORKSPACES, formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, ZEN_VIDEO_PACKAGES } from '../data/defaultData';
 
 interface EditorViewProps {
-  workspaces: Record<string, Workspace>;
   activeWorkspaceKey: string;
-  onSelectWorkspace: (key: string) => void;
   invoice: Invoice;
   clients: ClientPreset[];
   onUpdateInvoice: (updated: Invoice) => void;
@@ -30,18 +25,21 @@ interface EditorViewProps {
 }
 
 export const EditorView: React.FC<EditorViewProps> = ({
-  workspaces,
   activeWorkspaceKey,
-  onSelectWorkspace,
   invoice,
   clients,
   onUpdateInvoice,
   onPreview,
 }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [directoryModalOpen, setDirectoryModalOpen] = useState(false);
+  const [amountPaidInput, setAmountPaidInput] = useState(() =>
+    invoice.amountPaid ? String(invoice.amountPaid) : ''
+  );
+  useEffect(() => {
+    setAmountPaidInput(invoice.amountPaid ? String(invoice.amountPaid) : '');
+  }, [invoice.id]);
 
-  const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
+  const activeWs = FIXED_WORKSPACES[activeWorkspaceKey];
   if (!activeWs) return null;
 
   // Calculations
@@ -53,14 +51,6 @@ export const EditorView: React.FC<EditorViewProps> = ({
   const paymentStatus = getInvoicePaymentStatus(Math.min(amountPaid, grandTotal), grandTotal);
 
   // Actions
-  const handleRegenerateId = () => {
-    const rnd = Math.floor(100 + Math.random() * 900);
-    onUpdateInvoice({
-      ...invoice,
-      id: `INV-${new Date().getFullYear()}-${rnd}`,
-    });
-  };
-
   const handleApplyClient = (client: ClientPreset) => {
     onUpdateInvoice({ ...invoice, clientName: client.name, clientCompany: client.company || '', clientPhone: client.phone, clientEmail: client.email, clientAvatar: client.avatar || '' });
     setDirectoryModalOpen(false);
@@ -107,23 +97,22 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-28 pt-2">
-      {/* 1. Billing Entity Banner / Switcher */}
+      {/* 1. Fixed billing entity for this invoice */}
       <section className="mb-3.5">
-        <div
-          onClick={() => setDrawerOpen(!drawerOpen)}
-          className="bg-white/80 dark:bg-white/[0.04] border border-neutral-200/70 dark:border-white/[0.08] backdrop-blur-xl rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all"
-        >
+        <div className="bg-white/80 dark:bg-white/[0.04] border border-neutral-200/70 dark:border-white/[0.08] backdrop-blur-xl rounded-2xl p-3 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#635bff] to-purple-600 dark:from-[#571bc1] dark:to-[#00f0ff] p-[1.5px] shadow-sm shrink-0 overflow-hidden">
+            <div className="w-10 h-10 shrink-0 rounded-full overflow-hidden flex items-center justify-center">
               {activeWs.logoUrl ? (
                 <img
                   src={activeWs.logoUrl}
                   alt={activeWs.name}
-                  className="w-full h-full rounded-[9px] object-cover"
+                  className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-white dark:bg-[#0f131d] rounded-[9px] flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-headline font-bold text-base">
-                  {activeWs.initial}
+                <div className="w-full h-full rounded-xl bg-gradient-to-tr from-[#635bff] to-purple-600 dark:from-[#571bc1] dark:to-[#00f0ff] p-[1.5px] shadow-sm overflow-hidden flex items-center justify-center">
+                  <div className="w-full h-full bg-white dark:bg-[#0f131d] rounded-[9px] flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-headline font-bold text-base">
+                    {activeWs.initial}
+                  </div>
                 </div>
               )}
             </div>
@@ -136,57 +125,10 @@ export const EditorView: React.FC<EditorViewProps> = ({
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-white/[0.06] text-[#635bff] dark:text-[#00f0ff] font-mono text-xs font-medium">
-            <span>Swap</span>
-            <ArrowRightLeft className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-white/[0.06] text-neutral-500 dark:text-neutral-400 font-mono text-[10px] font-semibold">
+            <span>ISSUER LOCKED</span>
           </div>
         </div>
-
-        {/* Quick Swap Tray */}
-        {drawerOpen && (
-          <div className="mt-2 p-2 bg-white/95 dark:bg-[#0f131d]/95 backdrop-blur-2xl border border-neutral-200 dark:border-white/10 rounded-2xl shadow-xl flex flex-col gap-1 transition-all">
-            <div className="p-1.5 text-neutral-400 font-mono text-[10px] font-semibold uppercase tracking-wider">
-              Switch Entity
-            </div>
-            {Object.values(workspaces).map(ws => {
-              const isCurrent = ws.key === activeWorkspaceKey;
-              return (
-                <button
-                  key={ws.key}
-                  type="button"
-                  onClick={() => {
-                    onSelectWorkspace(ws.key);
-                    setDrawerOpen(false);
-                  }}
-                  className="flex items-center justify-between p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-white/5 text-left transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    {ws.logoUrl ? (
-                      <img
-                        src={ws.logoUrl}
-                        alt={ws.name}
-                        className="w-7 h-7 rounded-lg object-cover shrink-0 border border-black/10 dark:border-white/20"
-                      />
-                    ) : (
-                      <span className="w-7 h-7 rounded-lg bg-[#635bff]/15 text-[#635bff] dark:text-[#00f0ff] flex items-center justify-center font-bold text-xs shrink-0">
-                        {ws.initial}
-                      </span>
-                    )}
-                    <div>
-                      <p className="font-headline font-semibold text-xs text-neutral-900 dark:text-white">
-                        {ws.name}
-                      </p>
-                      <p className="text-[10px] text-neutral-500">{ws.tagline}</p>
-                    </div>
-                  </div>
-                  {isCurrent && (
-                    <BadgeCheck className="w-5 h-5 text-[#635bff] dark:text-[#00f0ff]" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </section>
 
       {/* 2. Invoice Details Section */}
@@ -198,7 +140,14 @@ export const EditorView: React.FC<EditorViewProps> = ({
               Invoice Details
             </h2>
           </div>
-          <span className="px-2 py-0.5 rounded-full bg-teal-500/15 dark:bg-emerald-500/15 border border-teal-500/30 text-teal-700 dark:text-emerald-400 font-mono text-[10px] font-semibold uppercase tracking-wider">
+          {/* Bug #2 fix: dynamic badge color based on actual paymentStatus */}
+          <span className={`px-2 py-0.5 rounded-full border font-mono text-[10px] font-semibold uppercase tracking-wider ${
+            paymentStatus === 'Paid'
+              ? 'bg-teal-500/15 border-teal-500/30 text-teal-700 dark:text-emerald-400'
+              : paymentStatus === 'Partially Paid'
+                ? 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300'
+                : 'bg-[#635bff]/15 border-[#635bff]/30 text-[#635bff] dark:text-[#00f0ff]'
+          }`}>
             {paymentStatus}
           </span>
         </div>
@@ -208,22 +157,15 @@ export const EditorView: React.FC<EditorViewProps> = ({
             <label className="block font-mono text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">
               Invoice Number
             </label>
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                value={invoice.id}
-                onChange={e => onUpdateInvoice({ ...invoice, id: e.target.value })}
-                className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] focus:border-[#635bff] dark:focus:border-[#00f0ff]/60 rounded-xl px-3 py-2 text-neutral-900 dark:text-white font-mono text-sm outline-none transition-all"
-              />
-              <button
-                type="button"
-                onClick={handleRegenerateId}
-                title="Regenerate Sequence"
-                className="absolute right-2.5 text-neutral-400 hover:text-[#635bff] dark:hover:text-[#00f0ff] p-1"
-              >
-                <RotateCw className="w-4 h-4" />
-              </button>
-            </div>
+            <input
+              type="text"
+              value={invoice.id}
+              readOnly
+              aria-readonly="true"
+              title="Invoice number is assigned automatically and cannot be changed"
+              className="w-full bg-neutral-100/80 dark:bg-[#171b26]/80 border border-neutral-200/80 dark:border-white/[0.08] rounded-xl px-3 py-2 text-neutral-600 dark:text-neutral-300 font-mono text-sm outline-none cursor-not-allowed"
+            />
+            <p className="mt-1 text-[10px] text-neutral-400">Assigned automatically when the invoice is created.</p>
           </div>
 
           <div>
@@ -390,19 +332,18 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       type="text"
                       value={item.desc}
                       onChange={e => handleUpdateItem(index, { desc: e.target.value })}
-                      readOnly={activeWs.key === 'zen'}
-                      className="w-full bg-transparent font-headline font-semibold text-sm text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400"
+                      className="w-full rounded-xl bg-neutral-50 dark:bg-[#171b26] border border-neutral-200 dark:border-white/10 focus:border-[#635bff] dark:focus:border-[#00f0ff]/60 px-3 py-2.5 font-headline font-semibold text-sm text-neutral-900 dark:text-white outline-none transition-colors placeholder:text-neutral-400"
                       placeholder="Work / Service Description"
                     />
                     <input
                       type="text"
                       value={item.notes}
                       onChange={e => handleUpdateItem(index, { notes: e.target.value })}
-                      className="w-full bg-transparent text-[11px] text-neutral-500 dark:text-neutral-400 outline-none mt-0.5 placeholder:text-neutral-400"
+                      className="w-full mt-2 rounded-xl bg-neutral-50 dark:bg-[#171b26] border border-neutral-200 dark:border-white/10 focus:border-[#635bff] dark:focus:border-[#00f0ff]/60 px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300 outline-none transition-colors placeholder:text-neutral-400"
                       placeholder="Notes (optional)"
                     />
                   </div>
-                  {invoice.items.length > 1 && activeWs.key !== 'zen' && (
+                  {invoice.items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleDeleteItem(index)}
@@ -423,7 +364,6 @@ export const EditorView: React.FC<EditorViewProps> = ({
                       <button
                         type="button"
                         onClick={() => handleAdjustQty(index, -1)}
-                        disabled={activeWs.key === 'zen'}
                         className="w-5 h-5 flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-bold active:scale-90"
                       >
                         -
@@ -434,13 +374,11 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         value={item.qty}
                         onFocus={e => e.currentTarget.select()}
                         onChange={e => handleUpdateItem(index, { qty: Math.max(1, parseInt(e.target.value) || 1) })}
-                        readOnly={activeWs.key === 'zen'}
                         className="w-full text-center bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => handleAdjustQty(index, 1)}
-                        disabled={activeWs.key === 'zen'}
                         className="w-5 h-5 flex items-center justify-center text-[#635bff] dark:text-[#00f0ff] font-bold active:scale-90"
                       >
                         +
@@ -461,7 +399,6 @@ export const EditorView: React.FC<EditorViewProps> = ({
                         value={item.rate}
                         onFocus={e => e.currentTarget.select()}
                         onChange={e => handleUpdateItem(index, { rate: Math.max(0, parseFloat(e.target.value) || 0) })}
-                        readOnly={activeWs.key === 'zen'}
                         className="w-full bg-transparent font-mono text-xs text-neutral-900 dark:text-white font-semibold outline-none"
                       />
                     </div>
@@ -482,14 +419,14 @@ export const EditorView: React.FC<EditorViewProps> = ({
         </div>
 
         {/* Add Line Item Button */}
-        {activeWs.key !== 'zen' && <button
+        <button
           type="button"
           onClick={handleAddItem}
           className="w-full mt-2.5 py-2.5 px-3 rounded-xl bg-white/70 dark:bg-white/[0.03] hover:bg-white dark:hover:bg-white/[0.06] border border-dashed border-[#635bff]/40 dark:border-[#00f0ff]/40 text-[#635bff] dark:text-[#00f0ff] font-mono text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition-all cursor-pointer"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Add Line Item</span>
-        </button>}
+        </button>
       </section>
 
       {/* 5. Payment Summary Card */}
@@ -522,9 +459,13 @@ export const EditorView: React.FC<EditorViewProps> = ({
                 type="number"
                 min="0"
                 step="1"
-                value={amountPaid}
+                value={amountPaidInput}
                 onFocus={e => e.currentTarget.select()}
-                onChange={e => onUpdateInvoice({ ...invoice, amountPaid: Math.max(0, Number(e.target.value) || 0) })}
+                onChange={e => {
+                  const value = e.target.value;
+                  setAmountPaidInput(value);
+                  onUpdateInvoice({ ...invoice, amountPaid: Math.max(0, Number(value) || 0) });
+                }}
                 className="w-full bg-transparent font-mono text-sm font-semibold text-neutral-900 dark:text-white outline-none"
                 aria-invalid={Boolean(paymentError)}
               />

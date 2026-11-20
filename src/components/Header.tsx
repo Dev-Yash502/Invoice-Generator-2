@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   const showBack = currentView !== 'dashboard';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 pt-safe backdrop-blur-xl bg-white/80 border-b border-black/[0.05] dark:bg-[#0a0e18]/85 dark:border-white/[0.08] shadow-[0_1px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-colors no-print">
+    <header className="fixed top-0 left-0 right-0 z-50 pt-safe backdrop-blur-xl bg-white/85 border-b border-[#e4e7f4] dark:bg-[#0a0e18]/85 dark:border-white/[0.08] shadow-[0_2px_12px_rgba(80,82,140,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-colors no-print">
       <div className="h-16 max-w-[580px] mx-auto px-4 flex items-center justify-between">
         {/* Left: Dynamic Navigation / Title */}
         <div className="flex items-center gap-2">

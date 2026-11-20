@@ -23,7 +23,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const amountPaid = getInvoiceAmountPaid(invoice, grandTotal);
   const remainingBalance = Math.max(0, grandTotal - amountPaid);
   const paymentStatus = getInvoicePaymentStatus(amountPaid, grandTotal);
-  const receiptId = invoice.id.replace('#INV-', '#REC-').replace('#PC-', '#REC-PC-').replace('#PRL-', '#REC-PRL-');
+  // Format receipt reference from invoice ID for all workspaces
+  const receiptId = invoice.id.startsWith('REC-')
+    ? invoice.id
+    : invoice.id.replace(/^(INV|PC|PRL)-/, 'REC-');
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -56,7 +59,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                 <img
                   src={workspace.logoUrl}
                   alt={workspace.name}
-                  className="w-3.5 h-3.5 rounded-full object-cover shrink-0 border border-black/10 dark:border-white/20"
+                  className="w-4 h-4 rounded-full object-contain shrink-0"
                 />
               )}
               <span className="truncate">{workspace.name}</span>
