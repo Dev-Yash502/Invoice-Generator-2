@@ -289,6 +289,9 @@ export default function App() {
             onRestoreInvoices={handleRestoreInvoices}
             onClearAllInvoices={handleClearAllInvoices}
             onShowToast={showToast}
+            workspaces={workspaces}
+            activeWorkspaceKey={activeWorkspaceKey}
+            onSelectWorkspace={setActiveWorkspaceKey}
           />
         )}
       </main>

@@ -9,7 +9,8 @@ import {
   Laptop,
   Check,
   X,
-  Download
+  Download,
+  ChevronRight
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
 import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from '../data/defaultData';
@@ -73,36 +74,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="flex flex-col w-full pb-8 pt-2 space-y-3.5">
-      {/* 1. Workspace Pill Switcher Strip */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-        {Object.values(workspaces).map(ws => {
-          const isSelected = ws.key === activeWorkspaceKey;
-          return (
-            <button
-              key={ws.key}
-              onClick={() => onSelectWorkspace(ws.key)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
-                isSelected
-                  ? 'bg-[#635bff] text-white shadow-md shadow-[#635bff]/25 font-semibold dark:bg-[#00f0ff] dark:text-[#002022] dark:shadow-[0_0_12px_rgba(0,240,255,0.4)]'
-                  : 'bg-white/80 dark:bg-white/[0.05] border border-neutral-200 dark:border-white/10 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white shadow-sm font-medium'
-              }`}
-            >
-              {ws.logoUrl ? (
-                <img
-                  src={ws.logoUrl}
-                  alt={ws.name}
-                  className="w-4 h-4 rounded-full object-contain shrink-0"
-                />
-              ) : (
-                renderWorkspaceIcon(ws.key, 'w-3.5 h-3.5')
-              )}
-              <span>{ws.name}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 2. Active Company Profile Card */}
+      {/* Active Company Profile Card */}
       {activeWorkspace ? <section className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-white/[0.05] border border-black/[0.05] dark:border-white/10 backdrop-blur-xl shadow-sm p-4 transition-all">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
@@ -130,10 +102,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <button
             onClick={onOpenSettings}
-            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-            title="Settings"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white text-xs font-mono transition-all cursor-pointer"
+            title="Switch Workspace Profile"
           >
-            <MoreVertical className="w-4 h-4" />
+            <span>Switch</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
