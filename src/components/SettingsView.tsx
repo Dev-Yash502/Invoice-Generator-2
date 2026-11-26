@@ -253,7 +253,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
               <div className="text-left">
                 <span className="font-headline font-semibold text-xs block text-emerald-800 dark:text-emerald-300">
-                  Export to Excel Sheet (.csv)
+                  Export to Excel Sheet (.xlsx)
                 </span>
                 <span className="text-[10px] text-neutral-500 font-mono">
                   Download all {invoices.length} invoices into a spreadsheet

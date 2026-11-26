@@ -1,4 +1,5 @@
 import { Workspace, Invoice } from '../types';
+import * as XLSX from 'xlsx';
 
 export const FIXED_WORKSPACES: Record<string, Workspace> = {
   zen: {
@@ -101,65 +102,51 @@ export function restoreInvoicesBackup(
 export function exportInvoicesToExcel(invoices: Invoice[], workspaces: Record<string, Workspace>): boolean {
   if (invoices.length === 0) return false;
 
-  const headers = [
-    'Invoice ID',
-    'Business / Workspace',
-    'Issue Date',
-    'Due Date',
-    'Client Name',
-    'Client Company',
-    'Client Phone',
-    'Client Email',
-    'Items Summary',
-    'Total Amount (₹)',
-    'Amount Paid (₹)',
-    'Remaining Balance (₹)',
-    'Payment Status'
-  ];
-
-  const escapeCsv = (val: any) => {
-    if (val === null || val === undefined) return '""';
-    const str = String(val).replace(/"/g, '""');
-    return `"${str}"`;
-  };
-
-  const rows = invoices.map(inv => {
+  const data = invoices.map(inv => {
     const ws = workspaces[inv.workspaceKey]?.name || inv.workspaceKey || '—';
     const total = getInvoiceTotal(inv);
     const paid = getInvoiceAmountPaid(inv, total);
     const balance = Math.max(0, total - paid);
     const status = getInvoicePaymentStatus(paid, total);
     const itemsSummary = (inv.items || [])
-      .map(it => `${it.desc || 'Item'} (Qty: ${it.qty || 1}, Rate: ₹${it.rate || 0})`)
+      .map(it => `${it.desc || 'Item'} (Qty: ${it.qty || 1}, Rate: ₹${Number(it.rate || 0).toLocaleString('en-IN')})`)
       .join('; ');
 
-    return [
-      escapeCsv(inv.id),
-      escapeCsv(ws),
-      escapeCsv(inv.issueDate),
-      escapeCsv(inv.dueDate),
-      escapeCsv(inv.clientName),
-      escapeCsv(inv.clientCompany || ''),
-      escapeCsv(inv.clientPhone || ''),
-      escapeCsv(inv.clientEmail || ''),
-      escapeCsv(itemsSummary),
-      escapeCsv(total),
-      escapeCsv(paid),
-      escapeCsv(balance),
-      escapeCsv(status)
-    ].join(',');
+    return {
+      'Invoice ID': inv.id,
+      'Business Profile': ws,
+      'Issue Date': inv.issueDate,
+      'Due Date': inv.dueDate,
+      'Client Name': inv.clientName || '—',
+      'Company': inv.clientCompany || '—',
+      'Phone': inv.clientPhone || '—',
+      'Email': inv.clientEmail || '—',
+      'Items / Services': itemsSummary,
+      'Total Amount': `₹${total.toLocaleString('en-IN')}`,
+      'Amount Paid': `₹${paid.toLocaleString('en-IN')}`,
+      'Remaining Balance': `₹${balance.toLocaleString('en-IN')}`,
+      'Payment Status': status,
+    };
   });
 
-  const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const ws = XLSX.utils.json_to_sheet(data);
+
+  // Dynamic spacious column auto-fit with extra padding so text never cramps
+  const headers = Object.keys(data[0] || {});
+  const colWidths = headers.map(header => {
+    const maxValLength = Math.max(
+      header.length,
+      ...data.map(row => String((row as any)[header] || '').length)
+    );
+    // Ensure at least 16 chars and add +6 padding for clean breathing room
+    return { wch: Math.min(65, Math.max(16, maxValLength + 6)) };
+  });
+  ws['!cols'] = colWidths;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+
   const dateStr = new Date().toISOString().split('T')[0];
-  a.href = url;
-  a.download = `invoices-export-${dateStr}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  XLSX.writeFile(wb, `invoices-export-${dateStr}.xlsx`);
   return true;
 }
