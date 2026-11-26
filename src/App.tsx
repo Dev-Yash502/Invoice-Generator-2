@@ -297,7 +297,6 @@ export default function App() {
             onPreviewInvoice={handlePreviewInvoice}
             onUpdateInvoicePayment={handleUpdateInvoicePayment}
             onOpenSettings={() => navigateTo('settings')}
-            onDownloadBackup={handleDownloadBackup}
           />
         )}
 
