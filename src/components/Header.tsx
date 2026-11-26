@@ -20,17 +20,13 @@ export const Header: React.FC<HeaderProps> = ({
   activeWorkspace,
 }) => {
   let title = 'QuickBill';
-  let subtitle = 'Invoices';
 
   if (currentView === 'editor') {
     title = 'New Invoice';
-    subtitle = 'QuickBill Builder';
   } else if (currentView === 'preview') {
     title = 'Invoice Preview';
-    subtitle = 'QuickBill Core';
   } else if (currentView === 'settings') {
     title = 'Settings';
-    subtitle = 'Preferences';
   }
 
   const showBack = currentView !== 'dashboard';

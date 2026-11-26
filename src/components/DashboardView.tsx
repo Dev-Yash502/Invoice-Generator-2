@@ -132,15 +132,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* 3. Invoices Section */}
       <div className="flex flex-col space-y-2 pt-1">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-headline font-bold text-base text-neutral-900 dark:text-white">
-              Invoices
-            </h3>
-            <span className="px-2 py-0.5 rounded-full bg-neutral-200/60 dark:bg-white/[0.08] text-neutral-600 dark:text-neutral-300 font-mono text-[10px] font-semibold">
-              {workspaceInvoices.length}
-            </span>
-          </div>
+        <div className="flex items-center justify-end px-1">
           <button
             onClick={onOpenNewInvoice}
             className="px-3 py-1.5 rounded-xl bg-[#635bff] dark:bg-[#00f0ff] text-white dark:text-[#002022] font-headline font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer"
