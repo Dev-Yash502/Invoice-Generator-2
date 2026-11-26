@@ -136,20 +136,62 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 2500);
   };
 
+  // Browser History & In-App Navigation Synchronization
+  const navigateTo = (newView: 'dashboard' | 'editor' | 'preview' | 'settings') => {
+    if (newView === currentView) return;
+    window.history.pushState({ view: newView }, '');
+    setCurrentView(newView);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Sync browser back/forward buttons (prevents exiting to browser home)
+  useEffect(() => {
+    if (!window.history.state || !window.history.state.view) {
+      window.history.replaceState({ view: 'dashboard' }, '');
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      // If modal was open, back should close modal first
+      if (isReceiptOpen) {
+        setIsReceiptOpen(false);
+        return;
+      }
+      const targetView = (event.state?.view || 'dashboard') as 'dashboard' | 'editor' | 'preview' | 'settings';
+      setCurrentView(targetView);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isReceiptOpen]);
+
   // Navigation handlers
   const handleBack = () => {
-    if (currentView === 'editor') setCurrentView('dashboard');
-    else if (currentView === 'preview') setCurrentView('editor');
-    else if (currentView === 'settings') setCurrentView('dashboard');
-    else setCurrentView('dashboard');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isReceiptOpen) {
+      setIsReceiptOpen(false);
+      return;
+    }
+    // If there is in-app history, use browser history back
+    if (window.history.state && window.history.state.view && window.history.state.view !== 'dashboard') {
+      window.history.back();
+    } else {
+      if (currentView === 'editor') setCurrentView('dashboard');
+      else if (currentView === 'preview') setCurrentView('editor');
+      else if (currentView === 'settings') setCurrentView('dashboard');
+      else setCurrentView('dashboard');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleOpenReceipt = () => {
+    window.history.pushState({ view: currentView, modal: 'receipt' }, '');
+    setIsReceiptOpen(true);
   };
 
   const handleStartNewInvoice = () => {
     const draft = createNewInvoiceDraft(activeWorkspaceKey, issueInvoiceNumber(activeWorkspaceKey));
     setWorkingInvoice(draft);
-    setCurrentView('editor');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('editor');
   };
 
   const handlePreviewInvoice = (inv: Invoice) => {
@@ -157,8 +199,7 @@ export default function App() {
     if (inv.workspaceKey && workspaces[inv.workspaceKey]) {
       setActiveWorkspaceKey(inv.workspaceKey);
     }
-    setCurrentView('preview');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('preview');
   };
 
   const handleCompileAndPreview = () => {
@@ -177,9 +218,8 @@ export default function App() {
         return [savedInvoice, ...prev];
       }
     });
-    setCurrentView('preview');
+    navigateTo('preview');
     showToast('Invoice prepared for export');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (isSupabaseConfigured) {
       upsertInvoice(savedInvoice);
     }
@@ -234,7 +274,7 @@ export default function App() {
       <Header
         currentView={currentView}
         onBack={handleBack}
-        onOpenSettings={() => setCurrentView('settings')}
+        onOpenSettings={() => navigateTo('settings')}
         isDark={isDark}
         onToggleTheme={toggleTheme}
         activeWorkspace={activeWs}
@@ -256,7 +296,7 @@ export default function App() {
             onOpenNewInvoice={handleStartNewInvoice}
             onPreviewInvoice={handlePreviewInvoice}
             onUpdateInvoicePayment={handleUpdateInvoicePayment}
-            onOpenSettings={() => setCurrentView('settings')}
+            onOpenSettings={() => navigateTo('settings')}
             onDownloadBackup={handleDownloadBackup}
           />
         )}
@@ -275,8 +315,8 @@ export default function App() {
           <PreviewView
             workspace={activeWs!}
             invoice={workingInvoice}
-            onEdit={() => setCurrentView('editor')}
-            onShowReceipt={() => setIsReceiptOpen(true)}
+            onEdit={() => navigateTo('editor')}
+            onShowReceipt={handleOpenReceipt}
             onShowToast={showToast}
           />
         )}
@@ -308,7 +348,7 @@ export default function App() {
       {/* Fixed Bottom Tab Navigation */}
       <BottomNav
         currentView={currentView}
-        onSelectView={setCurrentView}
+        onSelectView={navigateTo}
         onNewInvoice={handleStartNewInvoice}
       />
     </div>
