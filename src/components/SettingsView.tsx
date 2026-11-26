@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
-import { Sun, Moon, Database, Download, Upload, Trash2, FileCheck, AlertTriangle } from 'lucide-react';
+import { Sun, Moon, Database, Download, Upload, Trash2, FileCheck, AlertTriangle, Cloud, CloudOff } from 'lucide-react';
 import { Invoice } from '../types';
 import { downloadInvoicesBackup, restoreInvoicesBackup } from '../data/defaultData';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 interface SettingsViewProps {
   isDark: boolean;
@@ -92,7 +93,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Data & Backup Card */}
+      {/* 2. Cloud Database Status */}
+      <div className="bg-white/80 dark:bg-white/[0.04] border border-neutral-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              isSupabaseConfigured
+                ? 'bg-teal-500/15 text-teal-600 dark:text-emerald-400'
+                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+            }`}>
+              {isSupabaseConfigured ? <Cloud className="w-4 h-4" /> : <CloudOff className="w-4 h-4" />}
+            </div>
+            <div>
+              <h3 className="font-headline font-bold text-sm text-neutral-900 dark:text-white">
+                Cloud Sync (Supabase)
+              </h3>
+              <p className="text-[11px] text-neutral-500 font-mono">
+                {isSupabaseConfigured ? 'Connected & syncing to Cloud' : 'Offline / Local storage'}
+              </p>
+            </div>
+          </div>
+          <span className={`font-mono text-[10px] px-2.5 py-0.5 rounded-full font-semibold border ${
+            isSupabaseConfigured
+              ? 'bg-teal-500/15 border-teal-500/30 text-teal-700 dark:text-emerald-400'
+              : 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300'
+          }`}>
+            {isSupabaseConfigured ? 'ONLINE' : 'LOCAL'}
+          </span>
+        </div>
+      </div>
+
+      {/* 3. Data & Backup Card */}
       <div className="bg-white/80 dark:bg-white/[0.04] border border-neutral-200/80 dark:border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-xl">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">

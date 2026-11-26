@@ -14,6 +14,7 @@ import { PreviewView } from './components/PreviewView';
 import { SettingsView } from './components/SettingsView';
 import { ReceiptModal } from './components/ReceiptModal';
 import { Toast } from './components/Toast';
+import { isSupabaseConfigured, fetchInvoices, upsertInvoice, updateInvoicePayment } from './lib/supabase';
 
 export default function App() {
   // Theme state
@@ -67,6 +68,23 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('qb_invoices', JSON.stringify(invoices));
   }, [invoices]);
+
+  // Sync from Supabase Cloud on mount
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      fetchInvoices().then((cloudInvoices) => {
+        if (cloudInvoices) {
+          setInvoices((local) => {
+            // Merge cloud and local invoices, avoiding duplicates by id
+            const map = new Map<string, Invoice>();
+            local.forEach((inv) => map.set(inv.id, inv));
+            cloudInvoices.forEach((inv) => map.set(inv.id, inv));
+            return Array.from(map.values());
+          });
+        }
+      });
+    }
+  }, []);
 
   // Active working invoice
   const issueInvoiceNumber = (wsKey: string): string => {
@@ -162,6 +180,9 @@ export default function App() {
     setCurrentView('preview');
     showToast('Invoice prepared for export');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isSupabaseConfigured) {
+      upsertInvoice(savedInvoice);
+    }
   };
 
   const handleUpdateInvoicePayment = (invId: string, amountPaid: number) => {
@@ -169,7 +190,11 @@ export default function App() {
       if (inv.id !== invId) return inv;
       const total = getInvoiceTotal(inv);
       const validAmount = Math.min(total, Math.max(0, amountPaid));
-      return { ...inv, amountPaid: validAmount, status: getInvoicePaymentStatus(validAmount, total) };
+      const status = getInvoicePaymentStatus(validAmount, total);
+      if (isSupabaseConfigured) {
+        updateInvoicePayment(invId, validAmount, status);
+      }
+      return { ...inv, amountPaid: validAmount, status };
     }));
   };
 
