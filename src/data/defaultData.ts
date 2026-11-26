@@ -97,3 +97,69 @@ export function restoreInvoicesBackup(
   reader.onerror = () => onError('Failed to read backup file');
   reader.readAsText(file);
 }
+
+export function exportInvoicesToExcel(invoices: Invoice[], workspaces: Record<string, Workspace>): boolean {
+  if (invoices.length === 0) return false;
+
+  const headers = [
+    'Invoice ID',
+    'Business / Workspace',
+    'Issue Date',
+    'Due Date',
+    'Client Name',
+    'Client Company',
+    'Client Phone',
+    'Client Email',
+    'Items Summary',
+    'Total Amount (₹)',
+    'Amount Paid (₹)',
+    'Remaining Balance (₹)',
+    'Payment Status'
+  ];
+
+  const escapeCsv = (val: any) => {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  };
+
+  const rows = invoices.map(inv => {
+    const ws = workspaces[inv.workspaceKey]?.name || inv.workspaceKey || '—';
+    const total = getInvoiceTotal(inv);
+    const paid = getInvoiceAmountPaid(inv, total);
+    const balance = Math.max(0, total - paid);
+    const status = getInvoicePaymentStatus(paid, total);
+    const itemsSummary = (inv.items || [])
+      .map(it => `${it.desc || 'Item'} (Qty: ${it.qty || 1}, Rate: ₹${it.rate || 0})`)
+      .join('; ');
+
+    return [
+      escapeCsv(inv.id),
+      escapeCsv(ws),
+      escapeCsv(inv.issueDate),
+      escapeCsv(inv.dueDate),
+      escapeCsv(inv.clientName),
+      escapeCsv(inv.clientCompany || ''),
+      escapeCsv(inv.clientPhone || ''),
+      escapeCsv(inv.clientEmail || ''),
+      escapeCsv(itemsSummary),
+      escapeCsv(total),
+      escapeCsv(paid),
+      escapeCsv(balance),
+      escapeCsv(status)
+    ].join(',');
+  });
+
+  const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `invoices-export-${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return true;
+}

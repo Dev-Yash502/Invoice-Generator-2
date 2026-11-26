@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
-import { Sun, Moon, Database, Download, Upload, Trash2, FileCheck, AlertTriangle, Cloud, CloudOff, Building2, Check } from 'lucide-react';
+import { Sun, Moon, Database, Download, Upload, Trash2, FileCheck, AlertTriangle, Cloud, CloudOff, Building2, Check, FileSpreadsheet } from 'lucide-react';
 import { Invoice, Workspace } from '../types';
-import { downloadInvoicesBackup, restoreInvoicesBackup } from '../data/defaultData';
+import { downloadInvoicesBackup, restoreInvoicesBackup, exportInvoicesToExcel } from '../data/defaultData';
 import { isSupabaseConfigured } from '../lib/supabase';
 
 interface SettingsViewProps {
@@ -36,6 +36,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
     downloadInvoicesBackup(invoices);
     onShowToast(`Backup saved! (${invoices.length} invoices)`);
+  };
+
+  const handleExportExcel = () => {
+    if (invoices.length === 0) {
+      onShowToast('No invoices to export yet!');
+      return;
+    }
+    const ok = exportInvoicesToExcel(invoices, workspaces);
+    if (ok) {
+      onShowToast(`Exported ${invoices.length} invoices to Excel sheet!`);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,6 +241,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-2">
+          {/* Export to Excel Sheet Button */}
+          <button
+            type="button"
+            onClick={handleExportExcel}
+            className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/15 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/20 border border-emerald-500/30 text-neutral-900 dark:text-white transition-all active:scale-[0.99] cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center">
+                <FileSpreadsheet className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <span className="font-headline font-semibold text-xs block text-emerald-800 dark:text-emerald-300">
+                  Export to Excel Sheet (.csv)
+                </span>
+                <span className="text-[10px] text-neutral-500 font-mono">
+                  Download all {invoices.length} invoices into a spreadsheet
+                </span>
+              </div>
+            </div>
+            <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold">
+              XLS
+            </span>
+          </button>
+
           {/* Download Backup Button */}
           <button
             type="button"
