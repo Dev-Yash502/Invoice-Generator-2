@@ -1,5 +1,5 @@
 import { Workspace, Invoice } from '../types';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 export const FIXED_WORKSPACES: Record<string, Workspace> = {
   zen: {
@@ -131,17 +131,75 @@ export function exportInvoicesToExcel(invoices: Invoice[], workspaces: Record<st
 
   const ws = XLSX.utils.json_to_sheet(data);
 
-  // Dynamic spacious column auto-fit with extra padding so text never cramps
+  // Apply bold formatting and professional styling to every header cell in row 0
   const headers = Object.keys(data[0] || {});
+  headers.forEach((_, colIdx) => {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIdx });
+    if (ws[cellAddress]) {
+      ws[cellAddress].s = {
+        font: {
+          bold: true,
+          sz: 11,
+          name: 'Calibri',
+          color: { rgb: '0F172A' },
+        },
+        fill: {
+          fgColor: { rgb: 'F1F5F9' },
+        },
+        alignment: {
+          horizontal: 'center',
+          vertical: 'center',
+          wrapText: true,
+        },
+        border: {
+          top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+          bottom: { style: 'medium', color: { rgb: '94A3B8' } },
+          left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+          right: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        },
+      };
+    }
+  });
+
+  // Apply vertical center and clean borders to data rows
+  data.forEach((_, rowIdx) => {
+    headers.forEach((header, colIdx) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: rowIdx + 1, c: colIdx });
+      if (ws[cellAddress]) {
+        const isNumericCol = header.includes('Amount') || header.includes('Balance');
+        ws[cellAddress].s = {
+          font: {
+            sz: 11,
+            name: 'Calibri',
+            color: { rgb: '1E293B' },
+          },
+          alignment: {
+            vertical: 'center',
+            horizontal: isNumericCol ? 'right' : header.includes('Date') || header === 'Payment Status' ? 'center' : 'left',
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: 'E2E8F0' } },
+            bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+            left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+            right: { style: 'thin', color: { rgb: 'E2E8F0' } },
+          },
+        };
+      }
+    });
+  });
+
+  // Dynamic spacious column auto-fit with extra padding so text never cramps
   const colWidths = headers.map(header => {
     const maxValLength = Math.max(
       header.length,
       ...data.map(row => String((row as any)[header] || '').length)
     );
-    // Ensure at least 16 chars and add +6 padding for clean breathing room
     return { wch: Math.min(65, Math.max(16, maxValLength + 6)) };
   });
   ws['!cols'] = colWidths;
+
+  // Set generous row height for the header row
+  ws['!rows'] = [{ hpt: 26 }];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
