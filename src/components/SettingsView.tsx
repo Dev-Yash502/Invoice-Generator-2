@@ -50,14 +50,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     );
   };
 
-  const handleClear = () => {
-    if (invoices.length === 0) return;
-    const confirm = window.confirm(
-      'Are you sure you want to delete all invoices? Make sure you have downloaded a backup first!'
+  const handleReset = () => {
+    if (invoices.length === 0) {
+      onShowToast('No invoices to reset.');
+      return;
+    }
+    const input = window.prompt(
+      '⚠️ Warning: This will delete all saved invoice records.\n\nTo confirm reset, please type "RESET" below:'
     );
-    if (confirm) {
+    if (input === 'RESET') {
       onClearAllInvoices();
-      onShowToast('All invoice data cleared.');
+      onShowToast('All invoice data has been reset.');
+    } else if (input !== null) {
+      onShowToast('Reset cancelled: text did not match "RESET".');
     }
   };
 
@@ -191,27 +196,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
           </button>
-
-          {/* Clear Data Button */}
-          {invoices.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="flex items-center justify-between p-3 rounded-xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 transition-all active:scale-[0.99] cursor-pointer mt-1"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center">
-                  <Trash2 className="w-4 h-4" />
-                </div>
-                <div className="text-left">
-                  <span className="font-headline font-semibold text-xs block">Clear All Invoices</span>
-                  <span className="text-[10px] opacity-75 font-mono">Reset local storage data</span>
-                </div>
-              </div>
-              <AlertTriangle className="w-4 h-4 opacity-75" />
-            </button>
-          )}
         </div>
+      </div>
+
+      {/* Discreet Subtle Reset Link */}
+      <div className="pt-6 pb-2 text-center">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="text-[11px] font-mono text-neutral-400/50 hover:text-neutral-500 dark:text-neutral-600 dark:hover:text-neutral-400 transition-colors cursor-pointer select-none"
+        >
+          reset
+        </button>
       </div>
     </div>
   );
