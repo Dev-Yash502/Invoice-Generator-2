@@ -1,4 +1,4 @@
-import { Workspace } from '../types';
+import { Workspace, Invoice } from '../types';
 
 export const FIXED_WORKSPACES: Record<string, Workspace> = {
   zen: {
@@ -45,4 +45,55 @@ export function getInvoiceAmountPaid(invoice: { status?: string; amountPaid?: nu
 export function getInvoicePaymentStatus(amountPaid: number, total: number): 'Paid' | 'Partially Paid' | 'Unpaid' {
   if (total > 0 && amountPaid >= total) return 'Paid';
   return amountPaid > 0 ? 'Partially Paid' : 'Unpaid';
+}
+
+export function downloadInvoicesBackup(invoices: Invoice[]) {
+  const data = {
+    appName: 'QuickBill',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    totalInvoices: invoices.length,
+    invoices,
+  };
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `quickbill-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function restoreInvoicesBackup(
+  file: File,
+  onSuccess: (invoices: Invoice[]) => void,
+  onError: (err: string) => void
+) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target?.result as string);
+      let list: Invoice[] = [];
+      if (Array.isArray(parsed)) {
+        list = parsed;
+      } else if (parsed && Array.isArray(parsed.invoices)) {
+        list = parsed.invoices;
+      } else {
+        throw new Error('Invalid backup file format');
+      }
+      const valid = list.filter(i => i && typeof i.id === 'string' && Array.isArray(i.items));
+      if (valid.length === 0 && list.length > 0) {
+        throw new Error('No valid invoice records found in backup file');
+      }
+      onSuccess(valid);
+    } catch (err: any) {
+      onError(err.message || 'Failed to parse backup file');
+    }
+  };
+  reader.onerror = () => onError('Failed to read backup file');
+  reader.readAsText(file);
 }

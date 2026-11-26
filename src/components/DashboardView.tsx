@@ -8,7 +8,8 @@ import {
   Infinity as InfinityIcon,
   Laptop,
   Check,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
 import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from '../data/defaultData';
@@ -22,6 +23,7 @@ interface DashboardViewProps {
   onPreviewInvoice: (invoice: Invoice) => void;
   onUpdateInvoicePayment: (invoiceId: string, amountPaid: number) => void;
   onOpenSettings: () => void;
+  onDownloadBackup?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -33,6 +35,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onPreviewInvoice,
   onUpdateInvoicePayment,
   onOpenSettings,
+  onDownloadBackup,
 }) => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Partially Paid' | 'Unpaid'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -168,13 +171,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {workspaceInvoices.length}
             </span>
           </div>
-          <button
-            onClick={onOpenNewInvoice}
-            className="px-3 py-1.5 rounded-xl bg-[#635bff] dark:bg-[#00f0ff] text-white dark:text-[#002022] font-headline font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Bill</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onDownloadBackup && (
+              <button
+                type="button"
+                onClick={onDownloadBackup}
+                title="Download JSON Backup"
+                className="px-2.5 py-1.5 rounded-xl bg-white/80 dark:bg-white/[0.05] hover:bg-white dark:hover:bg-white/10 border border-neutral-200/80 dark:border-white/10 text-neutral-700 dark:text-neutral-300 hover:text-[#635bff] dark:hover:text-[#00f0ff] font-mono text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Backup</span>
+              </button>
+            )}
+            <button
+              onClick={onOpenNewInvoice}
+              className="px-3 py-1.5 rounded-xl bg-[#635bff] dark:bg-[#00f0ff] text-white dark:text-[#002022] font-headline font-bold text-xs flex items-center gap-1 shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Bill</span>
+            </button>
+          </div>
         </div>
 
         {/* Search & Status Pill Filters */}

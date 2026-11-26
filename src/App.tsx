@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Workspace, Invoice, ClientPreset } from './types';
-import { FIXED_WORKSPACES, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal } from './data/defaultData';
+import { FIXED_WORKSPACES, getInvoiceAmountPaid, getInvoicePaymentStatus, getInvoiceTotal, downloadInvoicesBackup } from './data/defaultData';
 import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { DashboardView } from './components/DashboardView';
@@ -173,6 +173,24 @@ export default function App() {
     }));
   };
 
+  const handleDownloadBackup = () => {
+    if (invoices.length === 0) {
+      showToast('No invoices to backup!');
+      return;
+    }
+    downloadInvoicesBackup(invoices);
+    showToast(`Backup downloaded (${invoices.length} invoices)`);
+  };
+
+  const handleRestoreInvoices = (restored: Invoice[]) => {
+    setInvoices(restored);
+  };
+
+  const handleClearAllInvoices = () => {
+    setInvoices([]);
+    localStorage.removeItem('qb_invoices');
+  };
+
   const activeWs = workspaces[activeWorkspaceKey] || Object.values(workspaces)[0];
   const savedClients = Object.values(invoices.reduce<Record<string, ClientPreset>>((clients, invoice) => {
     if (invoice.clientName?.trim()) {
@@ -214,6 +232,7 @@ export default function App() {
             onPreviewInvoice={handlePreviewInvoice}
             onUpdateInvoicePayment={handleUpdateInvoicePayment}
             onOpenSettings={() => setCurrentView('settings')}
+            onDownloadBackup={handleDownloadBackup}
           />
         )}
 
@@ -241,6 +260,10 @@ export default function App() {
           <SettingsView
             isDark={isDark}
             onToggleTheme={toggleTheme}
+            invoices={invoices}
+            onRestoreInvoices={handleRestoreInvoices}
+            onClearAllInvoices={handleClearAllInvoices}
+            onShowToast={showToast}
           />
         )}
       </main>

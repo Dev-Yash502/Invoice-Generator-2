@@ -9,6 +9,7 @@ import {
   Receipt,
   Copy,
   Check,
+  Quote,
 } from 'lucide-react';
 import { Workspace, Invoice } from '../types';
 import { formatINR, getInvoiceAmountPaid, getInvoicePaymentStatus } from '../data/defaultData';
@@ -265,10 +266,10 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
           >
             {/* Quote mark */}
             <span
-              className="shrink-0 select-none leading-none"
+              className="shrink-0 select-none leading-none translate-y-1.5"
               style={{
                 fontFamily: 'Georgia, "Times New Roman", serif',
-                fontSize: '3.5rem',
+                fontSize: '3.2rem',
                 lineHeight: '1',
                 fontWeight: 700,
                 color: '#426A9A',
@@ -291,17 +292,11 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
                   letterSpacing: '0.005em',
                 }}
               >
-                {quoteText.split(workspace.name).map((part, i, arr) => (
-                  <React.Fragment key={i}>
-                    {part}
-                    {i < arr.length - 1 && (
-                      <span style={{ fontStyle: 'italic', fontWeight: 800, color: '#1769C2' }}>
-                        {workspace.name}
-                      </span>
-                    )}
-                  </React.Fragment>
-                ))}
-                ”
+                “Great work is a result of trust, collaboration, and a shared vision. Thank you for choosing{' '}
+                <span style={{ fontStyle: 'italic', fontWeight: 800, color: '#1769C2' }}>
+                  {workspace.name}
+                </span>
+                !”
               </p>
               <div className="mx-auto mt-3 h-0.5 w-16 rounded-full bg-[#1769C2]" />
             </div>
